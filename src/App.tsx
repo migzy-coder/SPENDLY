@@ -7,6 +7,7 @@ import { I18nProvider } from "./lib/i18n";
 import { AppProviders, useBootstrap } from "./lib/store";
 import { ToastProvider } from "./components/Toast";
 import { UpdatePrompt } from "./components/UpdatePrompt";
+import { useFeature, type FeatureKey } from "./lib/features";
 
 const Welcome = lazy(() => import("./routes/Welcome").then((m) => ({ default: m.Welcome })));
 const SignInPage = lazy(() => import("./routes/SignIn").then((m) => ({ default: m.SignInPage })));
@@ -33,6 +34,7 @@ const Help = lazy(() => import("./routes/Settings").then((m) => ({ default: m.He
 const Legal = lazy(() => import("./routes/Legal").then((m) => ({ default: m.Legal })));
 const Offline = lazy(() => import("./routes/Offline").then((m) => ({ default: m.Offline })));
 const NotFound = lazy(() => import("./routes/NotFound").then((m) => ({ default: m.NotFound })));
+const Admin = lazy(() => import("./routes/Admin").then((m) => ({ default: m.Admin })));
 
 function BootScreen() {
   return (
@@ -67,6 +69,12 @@ function Protected({ children }: { children: ReactNode }) {
   );
 }
 
+function FeatureGate({ feature, children }: { feature: FeatureKey; children: ReactNode }) {
+  const enabled = useFeature(feature);
+  if (!enabled) return <Navigate to="/plan" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   const router = useMemo(
     () =>
@@ -75,29 +83,30 @@ export default function App() {
           path: "/",
           element: <RootLayout />,
           children: [
-            { index: true, element: <Navigate to="/today" replace /> },
+            { index: true, element: <Navigate to="/plan" replace /> },
             { path: "welcome", element: <Welcome /> },
             { path: "signin", element: <SignInPage /> },
             { path: "signup", element: <SignUpPage /> },
             { path: "setup", element: <SetupPage /> },
-            { path: "today", element: <Protected><Today /></Protected> },
-            { path: "goals", element: <Protected><Goals /></Protected> },
-            { path: "goals/new", element: <Protected><GoalNew /></Protected> },
-            { path: "goals/:id", element: <Protected><GoalDetail /></Protected> },
-            { path: "wishes/new", element: <Protected><WishNew /></Protected> },
-            { path: "wishes/:id", element: <Protected><WishDetail /></Protected> },
-            { path: "stats", element: <Protected><Stats /></Protected> },
-            { path: "plan", element: <Protected><Plan /></Protected> },
-            { path: "activity", element: <Protected><Activity /></Protected> },
-            { path: "activity/:id", element: <Protected><EntryDetail /></Protected> },
-            { path: "calendar", element: <Protected><Calendar /></Protected> },
-            { path: "simulator", element: <Protected><Simulator /></Protected> },
-            { path: "debts", element: <Protected><Debts /></Protected> },
-            { path: "debts/new", element: <Protected><DebtNew /></Protected> },
+            { path: "today", element: <Protected><FeatureGate feature="quickLog"><Today /></FeatureGate></Protected> },
+            { path: "goals", element: <Protected><FeatureGate feature="wishlist"><Goals /></FeatureGate></Protected> },
+            { path: "goals/new", element: <Protected><FeatureGate feature="wishlist"><GoalNew /></FeatureGate></Protected> },
+            { path: "goals/:id", element: <Protected><FeatureGate feature="wishlist"><GoalDetail /></FeatureGate></Protected> },
+            { path: "wishes/new", element: <Protected><FeatureGate feature="wishlist"><WishNew /></FeatureGate></Protected> },
+            { path: "wishes/:id", element: <Protected><FeatureGate feature="wishlist"><WishDetail /></FeatureGate></Protected> },
+            { path: "stats", element: <Protected><FeatureGate feature="stats"><Stats /></FeatureGate></Protected> },
+            { path: "plan", element: <Protected><FeatureGate feature="plan"><Plan /></FeatureGate></Protected> },
+            { path: "activity", element: <Protected><FeatureGate feature="activity"><Activity /></FeatureGate></Protected> },
+            { path: "activity/:id", element: <Protected><FeatureGate feature="activity"><EntryDetail /></FeatureGate></Protected> },
+            { path: "calendar", element: <Protected><FeatureGate feature="calendar"><Calendar /></FeatureGate></Protected> },
+            { path: "simulator", element: <Protected><FeatureGate feature="simulator"><Simulator /></FeatureGate></Protected> },
+            { path: "debts", element: <Protected><FeatureGate feature="debts"><Debts /></FeatureGate></Protected> },
+            { path: "debts/new", element: <Protected><FeatureGate feature="debts"><DebtNew /></FeatureGate></Protected> },
             { path: "settings", element: <Protected><Settings /></Protected> },
             { path: "settings/profile", element: <Protected><ProfileSettings /></Protected> },
             { path: "settings/reminders", element: <Protected><Reminders /></Protected> },
             { path: "settings/help", element: <Protected><Help /></Protected> },
+            { path: "admin", element: <Protected><Admin /></Protected> },
             { path: "legal/:slug", element: <Protected><Legal /></Protected> },
             { path: "offline", element: <Protected><Offline /></Protected> },
             { path: "*", element: <NotFound /> },

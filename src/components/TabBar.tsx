@@ -2,21 +2,56 @@ import { NavLink } from "react-router";
 import { useI18n } from "../lib/i18n";
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon";
+import { useFeatures } from "../lib/features";
 
-const TABS: { to: string; icon: IconName; labelKey: string }[] = [
-  { to: "/today", icon: "home", labelKey: "nav.today" },
-  { to: "/goals", icon: "target", labelKey: "nav.goals" },
-  { to: "/stats", icon: "stats", labelKey: "nav.stats" },
-  { to: "/plan", icon: "plan", labelKey: "nav.plan" },
-];
+type Tab = { to: string; icon: IconName; labelKey: string };
 
 export function TabBar({ onAdd }: { onAdd: () => void }) {
   const { t } = useI18n();
+  const features = useFeatures();
 
-  const renderTab = (tab: (typeof TABS)[number], index: number) => {
-    if (index === 1) {
-      return (
-        <div key="add" className="flex flex-1 items-center justify-center">
+  const tabs: Tab[] = [
+    ...(features.quickLog ? [{ to: "/today", icon: "home" as IconName, labelKey: "nav.today" }] : []),
+    ...(features.wishlist ? [{ to: "/goals", icon: "target" as IconName, labelKey: "nav.goals" }] : []),
+    ...(features.stats ? [{ to: "/stats", icon: "stats" as IconName, labelKey: "nav.stats" }] : []),
+    ...(features.plan ? [{ to: "/plan", icon: "plan" as IconName, labelKey: "nav.plan" }] : []),
+  ];
+
+  if (tabs.length === 0) return null;
+
+  const showAdd = features.quickLog;
+
+  return (
+    <nav
+      className="material hairline-t fixed inset-x-0 bottom-0 z-30 mx-auto flex h-[calc(66px+env(safe-area-inset-bottom,0px))] max-w-[480px] items-center gap-1 px-2 pb-[env(safe-area-inset-bottom,0px)]"
+      aria-label={t("app.name")}
+    >
+      {tabs.map((tab) => (
+        <NavLink
+          key={tab.to}
+          to={tab.to}
+          className={({ isActive }) =>
+            `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[18px] py-1.5 text-[11px] font-medium transition-colors ${
+              isActive ? "text-accent" : "text-muted"
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <span
+                className={`grid h-8 w-14 place-items-center rounded-[14px] transition-colors ${
+                  isActive ? "bg-accent-tint" : ""
+                }`}
+              >
+                <Icon name={tab.icon} size={23} filled={false} strokeWidth={isActive ? 2.1 : 1.8} />
+              </span>
+              <span className={isActive ? "font-semibold" : ""}>{t(tab.labelKey)}</span>
+            </>
+          )}
+        </NavLink>
+      ))}
+      {showAdd ? (
+        <div className="flex flex-1 items-center justify-center">
           <button
             type="button"
             onClick={onAdd}
@@ -26,40 +61,7 @@ export function TabBar({ onAdd }: { onAdd: () => void }) {
             <Icon name="plus" size={28} strokeWidth={2.2} />
           </button>
         </div>
-      );
-    }
-    return (
-      <NavLink
-        key={tab.to}
-        to={tab.to}
-        className={({ isActive }) =>
-          `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[18px] py-1.5 text-[11px] font-medium transition-colors ${
-            isActive ? "text-accent" : "text-muted"
-          }`
-        }
-      >
-        {({ isActive }) => (
-          <>
-            <span
-              className={`grid h-8 w-14 place-items-center rounded-[14px] transition-colors ${
-                isActive ? "bg-accent-tint" : ""
-              }`}
-            >
-              <Icon name={tab.icon} size={23} filled={false} strokeWidth={isActive ? 2.1 : 1.8} />
-            </span>
-            <span className={isActive ? "font-semibold" : ""}>{t(tab.labelKey)}</span>
-          </>
-        )}
-      </NavLink>
-    );
-  };
-
-  return (
-    <nav
-      className="material hairline-t fixed inset-x-0 bottom-0 z-30 mx-auto flex h-[calc(66px+env(safe-area-inset-bottom,0px))] max-w-[480px] items-center gap-1 px-2 pb-[env(safe-area-inset-bottom,0px)]"
-      aria-label={t("app.name")}
-    >
-      {TABS.map(renderTab)}
+      ) : null}
     </nav>
   );
 }

@@ -77,6 +77,7 @@ export const en: Dictionary = {
     demoMode: "Demo mode",
     demoNote:
       "Clerk is not connected on this environment yet. The app runs on local data stored on this device.",
+    demoContinue: "Continue in demo mode",
   },
   setup: {
     title: "Almost there",
@@ -421,5 +422,12 @@ export const en: Dictionary = {
     install: "Install Spendly on your home screen",
     installAction: "Install",
     iosHint: "On iPhone: tap Share, then “Add to Home Screen”.",
+  },
+  guide: {
+    howToUse: "How to use this page",
+  },
+  admin: {
+    title: "Admin",
+    subtitle: "Release features when users are ready",
   },
 };

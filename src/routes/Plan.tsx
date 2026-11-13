@@ -4,11 +4,13 @@ import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { Sheet } from "../components/Sheet";
 import { Button, Card, CountUp, Input, SectionHeader } from "../components/ui";
+import { PageGuide } from "../components/PageGuide";
 import { useI18n } from "../lib/i18n";
 import { formatXaf, monthKey } from "../lib/money";
 import { buildMonthState } from "../lib/selectors";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
 import { useToast } from "../components/Toast";
+import { useFeatures } from "../lib/features";
 
 export function Plan() {
   const { data } = useBootstrap();
@@ -17,6 +19,7 @@ export function Plan() {
   const navigate = useNavigate();
   const refresh = useRefresh();
   const { show } = useToast();
+  const features = useFeatures();
   const [editing, setEditing] = useState(false);
 
   const state = useMemo(() => (data ? buildMonthState(data, today) : null), [data, today]);
@@ -67,6 +70,15 @@ export function Plan() {
       </header>
 
       <div className="mt-5 flex flex-col gap-4 px-5">
+        <PageGuide
+          id="plan"
+          title={t("plan.title")}
+          steps={[
+            { title: "Ton plan du mois", body: "Ici tu vois tes revenus, tes charges fixes, ton épargne et ce qu’il reste pour le mois." },
+            { title: "Budget quotidien", body: "Spendly calcule ce que tu peux dépenser par jour avec ce qui reste." },
+            { title: "Ajuster", body: "Appuie sur « Modifier le plan » si tes revenus ou tes charges changent." },
+          ]}
+        />
         <Card className="overflow-hidden px-4 py-1">
           {rows.map((row) => (
             <div key={row.label} className="flex items-center justify-between py-3 hairline-b last:border-b-0">
@@ -94,128 +106,138 @@ export function Plan() {
           </span>
         </Card>
 
-        <button
-          type="button"
-          onClick={() => navigate("/simulator")}
-          className="flex w-full items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card active:scale-[0.99]"
-        >
-          <Mascot pose="details" size={72} />
-          <div className="min-w-0 flex-1">
-            <p className="text-[16px] font-bold">{t("plan.simulator")}</p>
-            <p className="mt-0.5 text-[13px] text-muted">{t("plan.simulatorBody")}</p>
-          </div>
-          <Icon name="chevronRight" size={20} className="text-muted" />
-        </button>
+        {features.simulator ? (
+          <button
+            type="button"
+            onClick={() => navigate("/simulator")}
+            className="flex w-full items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card active:scale-[0.99]"
+          >
+            <Mascot pose="details" size={72} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[16px] font-bold">{t("plan.simulator")}</p>
+              <p className="mt-0.5 text-[13px] text-muted">{t("plan.simulatorBody")}</p>
+            </div>
+            <Icon name="chevronRight" size={20} className="text-muted" />
+          </button>
+        ) : null}
 
-        <SectionHeader
-          title={t("plan.plannedSpending")}
-          action={
-            <Link to="/simulator" className="text-[14px] font-medium text-accent">
-              {t("common.add")}
-            </Link>
-          }
-        />
-        <Card className="overflow-hidden">
-          {planned.length ? (
-            planned.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 px-4 py-3 hairline-b last:border-b-0">
-                <span
-                  className="h-10 w-10 shrink-0 rounded-[13px]"
-                  style={{
-                    background:
-                      item.category === "Food"
-                        ? "var(--cat-food)"
-                        : item.category === "Transport"
-                          ? "var(--cat-transport)"
-                          : item.category === "Airtime"
-                            ? "var(--cat-airtime)"
-                            : item.category === "Clothes"
-                              ? "var(--cat-clothes)"
-                              : item.category === "Social"
-                                ? "var(--cat-social)"
-                                : "var(--cat-other)",
-                  }}
-                  aria-hidden="true"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[16px] font-medium">{item.name}</p>
-                  <p className="text-[13px] text-muted">
-                    {new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      timeZone: "UTC",
-                    }).format(new Date(`${item.date}T12:00:00Z`))}
-                  </p>
-                </div>
-                <span className="text-[16px] font-semibold tnum">{formatXaf(item.amount)}</span>
-                <button
-                  type="button"
-                  aria-label={`${t("common.remove")} ${item.name}`}
-                  onClick={async () => {
-                    await api.deletePlanned(item.id);
-                    await refresh();
-                    show(t("common.saved"));
-                  }}
-                  className="grid h-11 w-11 place-items-center text-muted"
-                >
-                  <Icon name="close" size={18} />
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="px-4 py-5 text-[14px] text-muted">{t("plan.nothingPlanned")}</p>
-          )}
-        </Card>
-
-        <SectionHeader
-          title={t("plan.debts")}
-          action={
-            <Link to="/debts" className="text-[14px] font-medium text-accent">
-              {t("common.all")}
-            </Link>
-          }
-        />
-        <Card className="overflow-hidden">
-          {debts.length ? (
-            debts.map((debt) => {
-              const payments = data.payments.filter((payment) => payment.debt_id === debt.id);
-              const paid = payments.filter((payment) => payment.paid_at).length;
-              const next = payments.find((payment) => !payment.paid_at);
-              return (
-                <div key={debt.id} className="px-4 py-3 hairline-b last:border-b-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[16px] font-medium">{debt.person}</p>
-                    <span className="rounded-full bg-gold/20 px-2.5 py-1 text-[12px] font-semibold text-gold-ink">
-                      {debt.direction === "owe" ? t("debts.iOwe") : t("debts.owedToMe")}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-[13px] text-muted">
-                    {t("debts.progress", { paid, count: debt.installments })} ·{" "}
-                    {t("debts.eachAmount", { amount: formatXaf(payments[0]?.amount ?? 0) })}
-                  </p>
-                  {next ? (
-                    <Button
-                      size="md"
-                      variant="outline"
-                      className="mt-2.5"
+        {features.simulator ? (
+          <>
+            <SectionHeader
+              title={t("plan.plannedSpending")}
+              action={
+                <Link to="/simulator" className="text-[14px] font-medium text-accent">
+                  {t("common.add")}
+                </Link>
+              }
+            />
+            <Card className="overflow-hidden">
+              {planned.length ? (
+                planned.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3 px-4 py-3 hairline-b last:border-b-0">
+                    <span
+                      className="h-10 w-10 shrink-0 rounded-[13px]"
+                      style={{
+                        background:
+                          item.category === "Food"
+                            ? "var(--cat-food)"
+                            : item.category === "Transport"
+                              ? "var(--cat-transport)"
+                              : item.category === "Airtime"
+                                ? "var(--cat-airtime)"
+                                : item.category === "Clothes"
+                                  ? "var(--cat-clothes)"
+                                  : item.category === "Social"
+                                    ? "var(--cat-social)"
+                                    : "var(--cat-other)",
+                      }}
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[16px] font-medium">{item.name}</p>
+                      <p className="text-[13px] text-muted">
+                        {new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          timeZone: "UTC",
+                        }).format(new Date(`${item.date}T12:00:00Z`))}
+                      </p>
+                    </div>
+                    <span className="text-[16px] font-semibold tnum">{formatXaf(item.amount)}</span>
+                    <button
+                      type="button"
+                      aria-label={`${t("common.remove")} ${item.name}`}
                       onClick={async () => {
-                        await api.payDebt(debt.id);
+                        await api.deletePlanned(item.id);
                         await refresh();
                         show(t("common.saved"));
                       }}
+                      className="grid h-11 w-11 place-items-center text-muted"
                     >
-                      {t("plan.recordPayment", { amount: formatXaf(next.amount) })}
-                    </Button>
-                  ) : (
-                    <p className="mt-2 text-[13px] font-medium text-success">{t("plan.allPaid")}</p>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            <p className="px-4 py-5 text-[14px] text-muted">{t("debts.noDebts")}</p>
-          )}
-        </Card>
+                      <Icon name="close" size={18} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="px-4 py-5 text-[14px] text-muted">{t("plan.nothingPlanned")}</p>
+              )}
+            </Card>
+          </>
+        ) : null}
+
+        {features.debts ? (
+          <>
+            <SectionHeader
+              title={t("plan.debts")}
+              action={
+                <Link to="/debts" className="text-[14px] font-medium text-accent">
+                  {t("common.all")}
+                </Link>
+              }
+            />
+            <Card className="overflow-hidden">
+              {debts.length ? (
+                debts.map((debt) => {
+                  const payments = data.payments.filter((payment) => payment.debt_id === debt.id);
+                  const paid = payments.filter((payment) => payment.paid_at).length;
+                  const next = payments.find((payment) => !payment.paid_at);
+                  return (
+                    <div key={debt.id} className="px-4 py-3 hairline-b last:border-b-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[16px] font-medium">{debt.person}</p>
+                        <span className="rounded-full bg-gold/20 px-2.5 py-1 text-[12px] font-semibold text-gold-ink">
+                          {debt.direction === "owe" ? t("debts.iOwe") : t("debts.owedToMe")}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[13px] text-muted">
+                        {t("debts.progress", { paid, count: debt.installments })} ·{" "}
+                        {t("debts.eachAmount", { amount: formatXaf(payments[0]?.amount ?? 0) })}
+                      </p>
+                      {next ? (
+                        <Button
+                          size="md"
+                          variant="outline"
+                          className="mt-2.5"
+                          onClick={async () => {
+                            await api.payDebt(debt.id);
+                            await refresh();
+                            show(t("common.saved"));
+                          }}
+                        >
+                          {t("plan.recordPayment", { amount: formatXaf(next.amount) })}
+                        </Button>
+                      ) : (
+                        <p className="mt-2 text-[13px] font-medium text-success">{t("plan.allPaid")}</p>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="px-4 py-5 text-[14px] text-muted">{t("debts.noDebts")}</p>
+              )}
+            </Card>
+          </>
+        ) : null}
 
         <Link to="/settings/reminders">
           <Button full variant="outline">

@@ -5,7 +5,7 @@
  * a local demo profile so it can still be opened and reviewed on a laptop.
  */
 
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useMemo, useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./auth-context";
 import type { AuthValue } from "./auth-context";
@@ -13,23 +13,49 @@ import type { AuthValue } from "./auth-context";
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 
 export const isDemoMode = !CLERK_KEY;
+const DEMO_ENTERED_KEY = "spendly.demo.entered";
 
 const ClerkBoundary = lazy(() => import("./clerk").then((module) => ({ default: module.ClerkBoundary })));
 
 function DemoAuth({ children }: { children: ReactNode }) {
+  const [entered, setEntered] = useState(() => {
+    try {
+      return localStorage.getItem(DEMO_ENTERED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  const signInDemo = useCallback(async () => {
+    try {
+      localStorage.setItem(DEMO_ENTERED_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    setEntered(true);
+  }, []);
+
   const value = useMemo<AuthValue>(
     () => ({
-      userId: "local-user",
+      userId: entered ? "local-user" : null,
       name: "",
       email: null,
       imageUrl: null,
-      isSignedIn: true,
+      isSignedIn: entered,
       isLoaded: true,
       isDemo: true,
       getToken: async () => null,
-      signOut: async () => undefined,
+      signOut: async () => {
+        try {
+          localStorage.removeItem(DEMO_ENTERED_KEY);
+        } catch {
+          /* ignore */
+        }
+        setEntered(false);
+      },
+      signInDemo,
     }),
-    [],
+    [entered, signInDemo],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

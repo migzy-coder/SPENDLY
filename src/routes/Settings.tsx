@@ -75,6 +75,13 @@ export function Settings() {
             onClick={() => navigate("/settings/help")}
             trailing={<Icon name="chevronRight" size={17} className="text-muted" />}
           />
+          <ListRow
+            icon="shield"
+            title={t("admin.title")}
+            subtitle={t("admin.subtitle")}
+            onClick={() => navigate("/admin")}
+            trailing={<Icon name="chevronRight" size={17} className="text-muted" />}
+          />
         </Group>
 
         <SectionHeader title={t("settings.language")} />

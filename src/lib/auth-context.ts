@@ -10,6 +10,8 @@ export type AuthValue = {
   isDemo: boolean;
   getToken: () => Promise<string | null>;
   signOut: () => Promise<void>;
+  /** Demo/local mode only: enter the app without Clerk. */
+  signInDemo?: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthValue | null>(null);

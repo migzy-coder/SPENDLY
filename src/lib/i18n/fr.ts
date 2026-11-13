@@ -75,6 +75,7 @@ export const fr = {
     demoMode: "Mode démo",
     demoNote:
       "Clerk n'est pas encore connecté sur cet environnement. L'app fonctionne avec des données locales sur cet appareil.",
+    demoContinue: "Continuer en mode démo",
   },
   setup: {
     title: "On est presque prêt",
@@ -417,6 +418,13 @@ export const fr = {
     install: "Installe Spendly sur ton écran d'accueil",
     installAction: "Installer",
     iosHint: "Sur iPhone : touche Partager, puis « Sur l'écran d'accueil ».",
+  },
+  guide: {
+    howToUse: "Comment utiliser cette page",
+  },
+  admin: {
+    title: "Admin",
+    subtitle: "Publier les fonctions quand les utilisateurs sont prêts",
   },
 };
 

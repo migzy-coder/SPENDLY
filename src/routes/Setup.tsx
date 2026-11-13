@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Mascot } from "../components/Mascot";
 import { Button, Capsule, Card, Input, cn } from "../components/ui";
 import { Icon } from "../components/Icon";
+import { PageGuide } from "../components/PageGuide";
 import { useI18n } from "../lib/i18n";
 import { formatXaf, monthKey } from "../lib/money";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
@@ -84,7 +85,7 @@ export function SetupPage() {
         });
       }
       await refresh();
-      navigate("/today", { replace: true });
+      navigate("/plan", { replace: true });
     } finally {
       setBusy(false);
     }
@@ -98,7 +99,7 @@ export function SetupPage() {
         </span>
         <button
           type="button"
-          onClick={() => navigate("/today")}
+          onClick={() => navigate("/plan")}
           className="text-[14px] font-medium text-accent"
         >
           {t("common.skip")}
@@ -117,6 +118,15 @@ export function SetupPage() {
       </div>
 
       <div className="flex-1">
+        <PageGuide
+          id="setup"
+          title="Créer ton plan"
+          steps={[
+            { title: "Tes revenus", body: "Indique ce que tu reçois chaque mois." },
+            { title: "Tes charges fixes", body: "Loyer, transport, internet… ce qui part chaque mois." },
+            { title: "Ton plan", body: "Spendly calcule ce qu’il te reste et un budget quotidien simple." },
+          ]}
+        />
         <div className="flex justify-center py-2">
           <Mascot pose={step === steps.length - 1 ? "signup" : "home"} size={130} />
         </div>

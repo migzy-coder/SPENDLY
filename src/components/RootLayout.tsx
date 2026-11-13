@@ -6,14 +6,21 @@ import { InstallHint } from "./InstallHint";
 import { TabBar } from "./TabBar";
 import { useBootstrap } from "../lib/store";
 import { applyTheme, readTheme } from "../lib/theme";
-
-const TAB_ROUTES = ["/today", "/goals", "/stats", "/plan"];
+import { useFeatures } from "../lib/features";
 
 export function RootLayout() {
   const location = useLocation();
   const [addOpen, setAddOpen] = useState(false);
   const { data } = useBootstrap();
-  const showTabs = TAB_ROUTES.includes(location.pathname);
+  const features = useFeatures();
+
+  const tabRoutes = [
+    ...(features.quickLog ? ["/today"] : []),
+    ...(features.wishlist ? ["/goals"] : []),
+    ...(features.stats ? ["/stats"] : []),
+    ...(features.plan ? ["/plan"] : []),
+  ];
+  const showTabs = tabRoutes.includes(location.pathname);
 
   // The appearance stored with the account wins over the local one.
   useEffect(() => {
