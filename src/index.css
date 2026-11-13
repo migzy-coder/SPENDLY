@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Spendly design tokens.
+   Light is the default: a cream page with white cards and a light blue accent.
+   Dark is a warm charcoal that keeps the same identity, used when the user
+   picks "Dark" in Settings.
+--------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --app-bg: #faf7f0;
+  --app-surface: #ffffff;
+  --app-soft: #f3efe6;
+  --app-hairline: #e9e3d6;
+  --app-ink: #15233e;
+  --app-muted: #5f6c86;
+  --app-accent: #2f6bf0;
+  --app-accent-soft: #8db4ff;
+  --app-accent-tint: #e6eeff;
+  --app-gold: #f5b83d;
+  --app-gold-ink: #15233e;
+  --app-danger: #c0392b;
+  --app-danger-tint: #fde5e1;
+  --app-success: #12805f;
+  --app-success-tint: #e3f4ea;
+  --app-bar: rgba(250, 247, 240, 0.82);
+  --app-shadow: 0 1px 2px rgba(60, 50, 30, 0.05), 0 8px 24px rgba(60, 50, 30, 0.07);
+  --app-shadow-lift: 0 10px 30px rgba(60, 50, 30, 0.14);
+
+  --cat-food: #d94a35;
+  --cat-transport: #2f6bf0;
+  --cat-social: #6e5be0;
+  --cat-airtime: #12805f;
+  --cat-clothes: #f5b83d;
+  --cat-other: #5f6c86;
+  --cat-ink: #ffffff;
+  --cat-ink-clothes: #15233e;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --app-bg: #14161c;
+  --app-surface: #1c1f27;
+  --app-soft: #232833;
+  --app-hairline: #2d3340;
+  --app-ink: #f0f2f7;
+  --app-muted: #99a3b4;
+  --app-accent: #6d9bff;
+  --app-accent-soft: #2f6bf0;
+  --app-accent-tint: #1c2a45;
+  --app-gold: #f5b83d;
+  --app-gold-ink: #14161c;
+  --app-danger: #ec7a6b;
+  --app-danger-tint: #3a2320;
+  --app-success: #45c295;
+  --app-success-tint: #16332a;
+  --app-bar: rgba(20, 22, 28, 0.84);
+  --app-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --app-shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  --cat-food: #e2664f;
+  --cat-transport: #5b8def;
+  --cat-social: #8f7cf0;
+  --cat-airtime: #2aa87f;
+  --cat-clothes: #f5b83d;
+  --cat-other: #8b95a8;
+  --cat-ink: #10131a;
+  --cat-ink-clothes: #14161c;
+}
+
+@theme inline {
+  --color-bg: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-soft: var(--app-soft);
+  --color-hairline: var(--app-hairline);
+  --color-ink: var(--app-ink);
+  --color-muted: var(--app-muted);
+  --color-accent: var(--app-accent);
+  --color-accent-soft: var(--app-accent-soft);
+  --color-accent-tint: var(--app-accent-tint);
+  --color-gold: var(--app-gold);
+  --color-gold-ink: var(--app-gold-ink);
+  --color-danger: var(--app-danger);
+  --color-danger-tint: var(--app-danger-tint);
+  --color-success: var(--app-success);
+  --color-success-tint: var(--app-success-tint);
+  --color-bar: var(--app-bar);
+
+  --color-cat-food: var(--cat-food);
+  --color-cat-transport: var(--cat-transport);
+  --color-cat-social: var(--cat-social);
+  --color-cat-airtime: var(--cat-airtime);
+  --color-cat-clothes: var(--cat-clothes);
+  --color-cat-other: var(--cat-other);
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica,
+    Arial, "Segoe UI", Roboto, sans-serif;
+
+  --radius-field: 12px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
+
+  --shadow-card: var(--app-shadow);
+  --shadow-lift: var(--app-shadow-lift);
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    background: var(--app-bg);
+  }
+
+  body {
+    margin: 0;
+    background: var(--app-bg);
+    color: var(--app-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-variant-numeric: tabular-nums;
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  input,
+  textarea,
+  select {
+    user-select: text;
+    -webkit-user-select: text;
+    /* 16px keeps iOS Safari from zooming when the field is focused. */
+    font-size: 16px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--app-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--app-accent-tint);
+  }
+}
+
+/* iOS style helpers ------------------------------------------------------- */
+
+@utility pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+}
+
+@utility hairline-t {
+  border-top: 0.5px solid var(--app-hairline);
+}
+
+@utility hairline-b {
+  border-bottom: 0.5px solid var(--app-hairline);
+}
+
+@utility no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@utility app-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility material {
+  background: var(--app-bar);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
