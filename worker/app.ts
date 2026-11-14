@@ -113,8 +113,16 @@ app.post("/api/setup", async (c) => {
   const data = body.data;
   const paydayEnd = data.paydayDayEnd ?? data.paydayDay;
   await c.env.DB.prepare(
-    "UPDATE users SET name = ?, payday_day = ?, payday_day_end = ?, nightly_time = ?, locale = ?, onboarded = 1 WHERE id = ?",
-  ).bind(data.name, data.paydayDay, paydayEnd, data.nightlyTime, data.locale, userId).run();
+    `INSERT INTO users (id, name, payday_day, payday_day_end, nightly_time, locale, onboarded, timezone)
+     VALUES (?, ?, ?, ?, ?, ?, 1, 'Africa/Douala')
+     ON CONFLICT(id) DO UPDATE SET
+       name = excluded.name,
+       payday_day = excluded.payday_day,
+       payday_day_end = excluded.payday_day_end,
+       nightly_time = excluded.nightly_time,
+       locale = excluded.locale,
+       onboarded = 1`,
+  ).bind(userId, data.name, data.paydayDay, paydayEnd, data.nightlyTime, data.locale).run();
   await c.env.DB.prepare(
     `INSERT INTO month_plans (id, user_id, month, income, savings_target, wishlist_budget)
      VALUES (?, ?, ?, ?, ?, ?)

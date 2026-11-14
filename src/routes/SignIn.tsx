@@ -59,7 +59,10 @@ function DemoContinue({ to }: { to: string }) {
 }
 
 export function SignInPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { isSignedIn, isLoaded, email, name, signOut } = useAuth();
+  const navigate = useNavigate();
+
   if (isDemoMode) {
     return (
       <AuthShell title={t("auth.signIn")}>
@@ -67,6 +70,36 @@ export function SignInPage() {
       </AuthShell>
     );
   }
+
+  if (isLoaded && isSignedIn) {
+    return (
+      <AuthShell title={t("auth.signIn")}>
+        <div className="flex flex-col gap-4 text-center">
+          <div className="rounded-[16px] bg-accent-tint/60 p-4">
+            <p className="text-[15px] font-semibold text-ink">
+              {locale === "fr" ? "Déjà connecté !" : "Already signed in!"}
+            </p>
+            <p className="mt-1 text-[13px] text-muted">
+              {email || name || (locale === "fr" ? "Session active" : "Active session")}
+            </p>
+          </div>
+          <Button full onClick={() => navigate("/plan", { replace: true })}>
+            {locale === "fr" ? "Accéder à mon budget" : "Go to my budget"}
+          </Button>
+          <Button
+            full
+            variant="outline"
+            onClick={async () => {
+              await signOut();
+            }}
+          >
+            {locale === "fr" ? "Se déconnecter / Changer de compte" : "Sign out / Switch account"}
+          </Button>
+        </div>
+      </AuthShell>
+    );
+  }
+
   return (
     <AuthShell title={t("auth.signIn")}>
       <SignIn routing="path" path="/signin" signUpUrl="/signup" fallbackRedirectUrl="/plan" />
@@ -80,7 +113,10 @@ export function SignInPage() {
 }
 
 export function SignUpPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { isSignedIn, isLoaded, email, name, signOut } = useAuth();
+  const navigate = useNavigate();
+
   if (isDemoMode) {
     return (
       <AuthShell title={t("auth.signUp")}>
@@ -88,6 +124,36 @@ export function SignUpPage() {
       </AuthShell>
     );
   }
+
+  if (isLoaded && isSignedIn) {
+    return (
+      <AuthShell title={t("auth.signUp")}>
+        <div className="flex flex-col gap-4 text-center">
+          <div className="rounded-[16px] bg-accent-tint/60 p-4">
+            <p className="text-[15px] font-semibold text-ink">
+              {locale === "fr" ? "Tu as déjà un compte connecté" : "You are already signed in"}
+            </p>
+            <p className="mt-1 text-[13px] text-muted">
+              {email || name || (locale === "fr" ? "Session active" : "Active session")}
+            </p>
+          </div>
+          <Button full onClick={() => navigate("/setup", { replace: true })}>
+            {locale === "fr" ? "Configurer mon budget" : "Set up my budget"}
+          </Button>
+          <Button
+            full
+            variant="outline"
+            onClick={async () => {
+              await signOut();
+            }}
+          >
+            {locale === "fr" ? "Se déconnecter" : "Sign out"}
+          </Button>
+        </div>
+      </AuthShell>
+    );
+  }
+
   return (
     <AuthShell title={t("auth.signUp")}>
       <SignUp routing="path" path="/signup" signInUrl="/signin" fallbackRedirectUrl="/setup" />

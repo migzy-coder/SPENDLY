@@ -128,8 +128,7 @@ export function SetupPage() {
       }
 
       await refresh();
-      // Show install prompt modal for Android/PC or iOS instructions
-      setShowInstallModal(true);
+      navigate("/plan", { replace: true });
     } catch (err) {
       console.error("Setup error", err);
       navigate("/plan", { replace: true });

@@ -1,8 +1,10 @@
-import { Link } from "react-router";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { Mascot } from "../components/Mascot";
 import { Button, Card } from "../components/ui";
 import { useI18n } from "../lib/i18n";
+import { useAuth } from "../lib/auth";
 import { Icon } from "../components/Icon";
 
 const containerVariants = {
@@ -27,6 +29,14 @@ const itemVariants = {
 
 export function Welcome() {
   const { t, locale, setLocale } = useI18n();
+  const { isSignedIn, isLoaded } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate("/plan", { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
 
   return (
     <div className="flex min-h-full flex-col px-6 pt-safe pb-[max(env(safe-area-inset-bottom,0px),24px)]">
@@ -104,14 +114,12 @@ export function Welcome() {
         transition={{ delay: 0.45, duration: 0.4, type: "spring", stiffness: 260, damping: 22 }}
         className="flex flex-col gap-2 pt-2"
       >
-        <Link to="/signup">
-          <Button full>{t("welcome.cta")}</Button>
-        </Link>
-        <Link to="/signin">
-          <Button full variant="plain">
-            {t("welcome.haveAccount")}
-          </Button>
-        </Link>
+        <Button full onClick={() => navigate("/signup")}>
+          {t("welcome.cta")}
+        </Button>
+        <Button full variant="plain" onClick={() => navigate("/signin")}>
+          {t("welcome.haveAccount")}
+        </Button>
       </motion.div>
     </div>
   );
