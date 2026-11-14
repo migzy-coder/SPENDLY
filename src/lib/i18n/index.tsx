@@ -34,6 +34,11 @@ export function readStoredLocale(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "fr" || stored === "en") return stored;
+    if (typeof navigator !== "undefined" && navigator.language) {
+      const lang = navigator.language.toLowerCase();
+      if (lang.startsWith("en")) return "en";
+      if (lang.startsWith("fr")) return "fr";
+    }
   } catch {
     /* private browsing */
   }

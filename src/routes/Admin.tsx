@@ -13,15 +13,15 @@ import {
   type FeatureKey,
 } from "../lib/features";
 
-const FEATURE_META: { key: FeatureKey; label: string; desc: string }[] = [
-  { key: "plan", label: "Plan (fondamental)", desc: "Onboarding, salaire/charges, quiz et plan du mois." },
-  { key: "quickLog", label: "Dépenses rapides (Aujourd’hui)", desc: "Ajouter une dépense et voir ce qu’il reste." },
-  { key: "stats", label: "Statistiques", desc: "Résumé simple des dépenses." },
-  { key: "wishlist", label: "Envies & rappels", desc: "Liste d’envies et rappels (quand c’est possible d’acheter)." },
-  { key: "activity", label: "Activité", desc: "Historique détaillé des entrées." },
-  { key: "calendar", label: "Calendrier", desc: "Vue calendrier." },
-  { key: "debts", label: "Dettes", desc: "Suivi des dettes et paiements." },
-  { key: "simulator", label: "Simulateur", desc: "« Puis-je me le permettre ? » et dépenses prévues." },
+const FEATURE_KEYS: FeatureKey[] = [
+  "plan",
+  "quickLog",
+  "stats",
+  "wishlist",
+  "activity",
+  "calendar",
+  "debts",
+  "simulator",
 ];
 
 export function Admin() {
@@ -38,7 +38,7 @@ export function Admin() {
     if (!storedPin) {
       // first time: set pin
       if (pin.trim().length < 4) {
-        setError("Choisis un code d’au moins 4 caractères.");
+        setError(t("admin.pinTooShort"));
         return;
       }
       setAdminPin(pin.trim());
@@ -52,33 +52,31 @@ export function Admin() {
       setUnlocked(true);
       setError("");
     } else {
-      setError("Code incorrect.");
+      setError(t("admin.pinTooShort"));
     }
   };
 
   if (!unlocked) {
     return (
       <div className="pb-6">
-        <NavBar title="Admin" />
+        <NavBar title={t("admin.title")} />
         <div className="flex flex-col gap-4 px-5 pt-2">
           <Card className="p-4">
-            <p className="text-[16px] font-bold">Espace admin</p>
+            <p className="text-[16px] font-bold">{t("admin.portalTitle")}</p>
             <p className="mt-1 text-[13px] text-muted">
-              {storedPin
-                ? "Entre ton code admin pour gérer les fonctions visibles."
-                : "Crée un code admin pour contrôler les fonctions publiées aux utilisateurs."}
+              {storedPin ? t("admin.enterPinHint") : t("admin.createPinHint")}
             </p>
             <div className="mt-3 flex flex-col gap-2">
               <Input
                 type="password"
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                placeholder={storedPin ? "Code admin" : "Nouveau code (min. 4)"}
-                aria-label="Code admin"
+                placeholder={storedPin ? t("admin.pinPlaceholder") : t("admin.newPinPlaceholder")}
+                aria-label={t("admin.pinPlaceholder")}
               />
               {error ? <p className="text-[13px] text-danger">{error}</p> : null}
               <Button full onClick={tryUnlock}>
-                {storedPin ? "Déverrouiller" : "Créer le code"}
+                {storedPin ? t("admin.unlock") : t("admin.createCode")}
               </Button>
             </div>
           </Card>
@@ -89,42 +87,45 @@ export function Admin() {
 
   return (
     <div className="pb-6">
-      <NavBar title="Admin" />
+      <NavBar title={t("admin.title")} />
       <div className="flex flex-col gap-4 px-5 pt-2">
         <Card className="p-4">
-          <p className="text-[16px] font-bold">Publier des fonctions</p>
-          <p className="mt-1 text-[13px] text-muted">
-            Active les fonctions quand les utilisateurs sont prêts. Le code reste en place (réservé) — tu choisis ce qui est visible.
-            Par défaut : fondamentaux (Plan) uniquement.
+          <p className="text-[16px] font-bold">{t("admin.publishFeatures")}</p>
+          <p className="mt-1 text-[13px] text-muted whitespace-pre-line">
+            {t("admin.publishFeaturesHint")}
           </p>
         </Card>
 
         <Group>
-          {FEATURE_META.map((f) => (
-            <ListRow
-              key={f.key}
-              title={f.label}
-              subtitle={f.desc}
-              trailing={
-                <Switch
-                  checked={flags[f.key]}
-                  label={f.label}
-                  onChange={(v) => setFeatureFlag(f.key, v)}
-                />
-              }
-            />
-          ))}
+          {FEATURE_KEYS.map((key) => {
+            const label = t(`admin.features.${key}Title`);
+            const desc = t(`admin.features.${key}Desc`);
+            return (
+              <ListRow
+                key={key}
+                title={label}
+                subtitle={desc}
+                trailing={
+                  <Switch
+                    checked={flags[key]}
+                    label={label}
+                    onChange={(v) => setFeatureFlag(key, v)}
+                  />
+                }
+              />
+            );
+          })}
         </Group>
 
         <Card className="flex flex-col gap-2 p-4">
-          <p className="text-[14px] font-medium">Changer le code admin</p>
+          <p className="text-[14px] font-medium">{t("admin.changePin")}</p>
           <div className="flex gap-2">
             <Input
               type="password"
               value={newPin}
               onChange={(e) => setNewPin(e.target.value)}
-              placeholder="Nouveau code"
-              aria-label="Nouveau code"
+              placeholder={t("admin.newCode")}
+              aria-label={t("admin.newCode")}
             />
             <Button
               size="md"
@@ -135,11 +136,11 @@ export function Admin() {
                 }
               }}
             >
-              OK
+              {t("admin.ok")}
             </Button>
           </div>
           <Button variant="outline" onClick={() => { resetFeatureFlags(); }}>
-            Réinitialiser (fondamentaux)
+            {t("admin.resetFundamentals")}
           </Button>
           <Button
             variant="plain"
@@ -148,7 +149,7 @@ export function Admin() {
               setUnlocked(false);
             }}
           >
-            Verrouiller
+            {t("admin.lock")}
           </Button>
         </Card>
         <p className="px-1 text-[12px] text-muted">{t("settings.storageNote")}</p>

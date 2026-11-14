@@ -38,7 +38,7 @@ function DemoContinue({ to }: { to: string }) {
         {t("auth.demoContinue")}
       </Button>
       <p className="text-center text-[13px] text-muted">
-        Pour connecter de vrais comptes, configure Clerk (VITE_CLERK_PUBLISHABLE_KEY) puis redéploie.
+        {t("auth.demoConfigureClerk")}
       </p>
       <Link to="/welcome" className="text-center text-[14px] font-medium text-accent">
         {t("common.back")}

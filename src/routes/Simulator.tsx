@@ -10,51 +10,55 @@ import { buildMonthState } from "../lib/selectors";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
 import type { Category } from "../lib/types";
 
-const PRESETS: { key: string; label: string; category: Category; lines: { name: string; amount: number }[] }[] = [
+type PresetKey = "cinema" | "restaurant" | "trip" | "shopping" | "other";
+type LineKey = "ticket" | "snacks" | "transport" | "meal" | "drinks" | "item" | "cost" | "gift" | "other";
+
+type PresetDef = {
+  key: PresetKey;
+  category: Category;
+  lines: { key: LineKey; amount: number }[];
+};
+
+const PRESETS: PresetDef[] = [
   {
     key: "cinema",
-    label: "Cinéma",
     category: "Social",
     lines: [
-      { name: "Ticket", amount: 3000 },
-      { name: "Snacks", amount: 2000 },
-      { name: "Transport", amount: 1500 },
+      { key: "ticket", amount: 3000 },
+      { key: "snacks", amount: 2000 },
+      { key: "transport", amount: 1500 },
     ],
   },
   {
     key: "restaurant",
-    label: "Restaurant",
     category: "Food",
     lines: [
-      { name: "Repas", amount: 6000 },
-      { name: "Boissons", amount: 2000 },
-      { name: "Transport", amount: 1500 },
+      { key: "meal", amount: 6000 },
+      { key: "drinks", amount: 2000 },
+      { key: "transport", amount: 1500 },
     ],
   },
   {
     key: "trip",
-    label: "Voyage",
     category: "Transport",
     lines: [
-      { name: "Transport", amount: 8000 },
-      { name: "Repas", amount: 4000 },
+      { key: "transport", amount: 8000 },
+      { key: "meal", amount: 4000 },
     ],
   },
   {
     key: "shopping",
-    label: "Shopping",
     category: "Clothes",
-    lines: [{ name: "Article", amount: 10000 }],
+    lines: [{ key: "item", amount: 10000 }],
   },
   {
     key: "other",
-    label: "Autre",
     category: "Other",
-    lines: [{ name: "Coût", amount: 5000 }],
+    lines: [{ key: "cost", amount: 5000 }],
   },
 ];
 
-const EXTRA_LINES = ["Ticket", "Snacks", "Repas", "Transport", "Cadeau", "Autre"];
+const EXTRA_LINE_KEYS: LineKey[] = ["ticket", "snacks", "meal", "transport", "gift", "other"];
 
 export function Simulator() {
   const { data } = useBootstrap();
@@ -64,8 +68,13 @@ export function Simulator() {
   const refresh = useRefresh();
   const { show } = useToast();
 
-  const [presetKey, setPresetKey] = useState(PRESETS[0].key);
-  const [lines, setLines] = useState(PRESETS[0].lines);
+  const getPresetLines = (key: PresetKey) => {
+    const p = PRESETS.find((item) => item.key === key) ?? PRESETS[0];
+    return p.lines.map((l) => ({ name: t(`simulator.lines.${l.key}`), amount: l.amount }));
+  };
+
+  const [presetKey, setPresetKey] = useState<PresetKey>(PRESETS[0].key);
+  const [lines, setLines] = useState<{ name: string; amount: number }[]>(() => getPresetLines(PRESETS[0].key));
   const [day, setDay] = useState(today);
 
   const state = useMemo(() => (data ? buildMonthState(data, today) : null), [data, today]);
@@ -135,10 +144,10 @@ export function Simulator() {
                 selected={presetKey === item.key}
                 onClick={() => {
                   setPresetKey(item.key);
-                  setLines(item.lines);
+                  setLines(getPresetLines(item.key));
                 }}
               >
-                {item.label}
+                {t(`simulator.presets.${item.key}`)}
               </Capsule>
             ))}
           </div>
@@ -179,11 +188,14 @@ export function Simulator() {
               </div>
             ))}
             <div className="mt-1 flex flex-wrap gap-2">
-              {EXTRA_LINES.map((name) => (
-                <Capsule key={name} onClick={() => setLines((list) => [...list, { name, amount: 2000 }])}>
-                  + {name}
-                </Capsule>
-              ))}
+              {EXTRA_LINE_KEYS.map((key) => {
+                const name = t(`simulator.lines.${key}`);
+                return (
+                  <Capsule key={key} onClick={() => setLines((list) => [...list, { name, amount: 2000 }])}>
+                    + {name}
+                  </Capsule>
+                );
+              })}
             </div>
           </Card>
         </div>
@@ -256,7 +268,7 @@ export function Simulator() {
             disabled={!total}
             onClick={async () => {
               await api.createPlanned({
-                name: preset.label,
+                name: t(`simulator.presets.${preset.key}`),
                 date: day,
                 category: preset.category,
                 amount: total,

@@ -117,8 +117,8 @@ export default function App() {
   );
 
   return (
-    <AuthProvider>
-      <I18nProvider>
+    <I18nProvider>
+      <AuthProvider>
         <AppProviders>
           <ToastProvider>
             <Suspense fallback={<BootScreen />}>
@@ -127,7 +127,7 @@ export default function App() {
             <UpdatePrompt />
           </ToastProvider>
         </AppProviders>
-      </I18nProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </I18nProvider>
   );
 }

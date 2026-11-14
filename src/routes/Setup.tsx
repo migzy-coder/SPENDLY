@@ -120,11 +120,11 @@ export function SetupPage() {
       <div className="flex-1">
         <PageGuide
           id="setup"
-          title="Créer ton plan"
+          title={t("setup.guideTitle")}
           steps={[
-            { title: "Tes revenus", body: "Indique ce que tu reçois chaque mois." },
-            { title: "Tes charges fixes", body: "Loyer, transport, internet… ce qui part chaque mois." },
-            { title: "Ton plan", body: "Spendly calcule ce qu’il te reste et un budget quotidien simple." },
+            { title: t("setup.guideStep1Title"), body: t("setup.guideStep1Body") },
+            { title: t("setup.guideStep2Title"), body: t("setup.guideStep2Body") },
+            { title: t("setup.guideStep3Title"), body: t("setup.guideStep3Body") },
           ]}
         />
         <div className="flex justify-center py-2">

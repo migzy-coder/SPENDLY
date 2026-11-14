@@ -4,10 +4,12 @@
  */
 
 import { ClerkProvider, useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/react";
+import { enUS, frFR } from "@clerk/localizations";
 import { useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { AuthContext } from "./auth-context";
 import type { AuthValue } from "./auth-context";
+import { useI18n } from "./i18n";
 import { setTokenProvider } from "./token";
 
 export const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
@@ -44,9 +46,12 @@ export function ClerkAuthRoot({ children }: { children: ReactNode }) {
 }
 
 export function ClerkBoundary({ children }: { children: ReactNode }) {
+  const { locale } = useI18n();
+
   return (
     <ClerkProvider
       publishableKey={CLERK_KEY as string}
+      localization={locale === "fr" ? frFR : enUS}
       appearance={{
         variables: {
           colorPrimary: "#2F6BF0",

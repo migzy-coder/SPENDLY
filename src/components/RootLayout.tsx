@@ -5,6 +5,7 @@ import { AddSheet } from "./AddSheet";
 import { InstallHint } from "./InstallHint";
 import { TabBar } from "./TabBar";
 import { useBootstrap } from "../lib/store";
+import { useI18n } from "../lib/i18n";
 import { applyTheme, readTheme } from "../lib/theme";
 import { useFeatures } from "../lib/features";
 
@@ -12,6 +13,7 @@ export function RootLayout() {
   const location = useLocation();
   const [addOpen, setAddOpen] = useState(false);
   const { data } = useBootstrap();
+  const { locale, setLocale } = useI18n();
   const features = useFeatures();
 
   const tabRoutes = [
@@ -22,11 +24,15 @@ export function RootLayout() {
   ];
   const showTabs = tabRoutes.includes(location.pathname);
 
-  // The appearance stored with the account wins over the local one.
+  // The appearance and language stored with the account win over the local ones.
   useEffect(() => {
     const stored = data?.user?.theme;
     if (stored && stored !== readTheme()) applyTheme(stored);
-  }, [data]);
+    const userLocale = data?.user?.locale;
+    if (userLocale && (userLocale === "fr" || userLocale === "en") && userLocale !== locale) {
+      setLocale(userLocale);
+    }
+  }, [data, locale, setLocale]);
 
   return (
     <div className="mx-auto flex h-[100dvh] w-full max-w-[480px] flex-col overflow-hidden bg-bg">

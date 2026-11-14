@@ -74,9 +74,9 @@ export function Plan() {
           id="plan"
           title={t("plan.title")}
           steps={[
-            { title: "Ton plan du mois", body: "Ici tu vois tes revenus, tes charges fixes, ton épargne et ce qu’il reste pour le mois." },
-            { title: "Budget quotidien", body: "Spendly calcule ce que tu peux dépenser par jour avec ce qui reste." },
-            { title: "Ajuster", body: "Appuie sur « Modifier le plan » si tes revenus ou tes charges changent." },
+            { title: t("plan.guideStep1Title"), body: t("plan.guideStep1Body") },
+            { title: t("plan.guideStep2Title"), body: t("plan.guideStep2Body") },
+            { title: t("plan.guideStep3Title"), body: t("plan.guideStep3Body") },
           ]}
         />
         <Card className="overflow-hidden px-4 py-1">
