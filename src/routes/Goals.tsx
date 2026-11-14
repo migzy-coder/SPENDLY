@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
-import { Button, Card, Capsule, CountUp, EmptyState, Input, ProgressBar, Ring, SectionHeader, Tag } from "../components/ui";
+import { AmountInput, Button, Card, Capsule, CountUp, EmptyState, Input, ProgressBar, Ring, SectionHeader, Tag } from "../components/ui";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n";
 import { formatXaf, safeToBuy } from "../lib/money";
@@ -277,7 +277,7 @@ export function GoalNew() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("goals.target")}</span>
-          <Input type="tel" inputMode="numeric" value={target} onChange={(event) => setTarget(event.target.value)} placeholder="0" />
+          <AmountInput value={target} onChange={(event) => setTarget(event.target.value)} placeholder="0" />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("goals.dueDate")}</span>
@@ -368,14 +368,14 @@ export function GoalDetail() {
           ))}
         </div>
         <div className="flex gap-2">
-          <Input
-            type="tel"
-            inputMode="numeric"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            placeholder={t("goals.custom")}
-            aria-label={t("goals.custom")}
-          />
+          <div className="flex-1">
+            <AmountInput
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder={t("goals.custom")}
+              aria-label={t("goals.custom")}
+            />
+          </div>
           <Button
             size="md"
             disabled={!Number(amount.replace(/\D/g, ""))}
@@ -443,7 +443,7 @@ export function WishNew() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("goals.price")}</span>
-          <Input type="tel" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="0" />
+          <AmountInput value={price} onChange={(event) => setPrice(event.target.value)} placeholder="0" />
         </label>
         <div>
           <p className="mb-1.5 px-1 text-[13px] font-medium text-muted">{t("goals.source")}</p>

@@ -5,6 +5,7 @@ import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
 import { Sheet } from "../components/Sheet";
 import { Button, Capsule, Card, Group, Input, ListRow, SectionHeader, Segmented, Switch } from "../components/ui";
+import { PaydayRangePicker } from "../components/PaydayRangePicker";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
@@ -94,6 +95,7 @@ export function Settings() {
                 void api.saveProfile({
                   name: data.user.name,
                   paydayDay: data.user.payday_day,
+                  paydayDayEnd: data.user.payday_day_end,
                   nightlyTime: data.user.nightly_time,
                   locale: value,
                   theme,
@@ -118,6 +120,7 @@ export function Settings() {
                 void api.saveProfile({
                   name: data.user.name,
                   paydayDay: data.user.payday_day,
+                  paydayDayEnd: data.user.payday_day_end,
                   nightlyTime: data.user.nightly_time,
                   locale,
                   theme: value,
@@ -211,7 +214,8 @@ export function ProfileSettings() {
   const refresh = useRefresh();
   const { show } = useToast();
   const [name, setName] = useState(data?.user?.name ?? "");
-  const [payday, setPayday] = useState(String(data?.user?.payday_day ?? 25));
+  const [paydayStart, setPaydayStart] = useState(data?.user?.payday_day ?? 24);
+  const [paydayEnd, setPaydayEnd] = useState(data?.user?.payday_day_end ?? 28);
   const [nightlyTime, setNightlyTime] = useState(data?.user?.nightly_time ?? "21:00");
 
   return (
@@ -222,10 +226,17 @@ export function ProfileSettings() {
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("settings.name")}</span>
           <Input value={name} onChange={(event) => setName(event.target.value)} />
         </label>
-        <label className="block">
-          <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("settings.paydayDay")}</span>
-          <Input type="tel" inputMode="numeric" value={payday} onChange={(event) => setPayday(event.target.value)} />
-        </label>
+        <div>
+          <span className="mb-2 block text-[13px] font-medium text-muted">{t("setup.stepPayday")}</span>
+          <PaydayRangePicker
+            startDay={paydayStart}
+            endDay={paydayEnd}
+            onChange={(start, end) => {
+              setPaydayStart(start);
+              setPaydayEnd(end);
+            }}
+          />
+        </div>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("settings.nightlyTime")}</span>
           <Input type="time" value={nightlyTime} onChange={(event) => setNightlyTime(event.target.value)} />
@@ -239,7 +250,8 @@ export function ProfileSettings() {
           onClick={async () => {
             await api.saveProfile({
               name: name.trim(),
-              paydayDay: Math.max(1, Math.min(28, Number(payday.replace(/\D/g, "")) || 25)),
+              paydayDay: paydayStart,
+              paydayDayEnd: paydayEnd,
               nightlyTime: /^\d{2}:\d{2}$/.test(nightlyTime) ? nightlyTime : "21:00",
               locale: data?.user?.locale ?? "fr",
               theme: data?.user?.theme ?? "light",

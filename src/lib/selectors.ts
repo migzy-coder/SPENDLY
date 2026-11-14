@@ -69,7 +69,7 @@ export function buildMonthState(data: Bootstrap, today: string): MonthState {
 
   const income = plan?.income ?? 0;
   const fixedCosts = sumBy(data.fixedCosts.filter((cost) => cost.recurring), (cost) => cost.amount);
-  const savings = (plan?.savings_target ?? 0) + sumBy(monthContributions, (item) => item.amount);
+  const savings = Math.max(plan?.savings_target ?? 0, sumBy(monthContributions, (item) => item.amount));
   const debtPayments = debtDueThisMonth(data.payments, data.debts, month);
   const wishlist = plan?.wishlist_budget ?? 0;
   const spent = sumBy(entries, (entry) => entry.amount);

@@ -94,7 +94,8 @@ app.get("/api/bootstrap", async (c) => {
 
 const setupSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  paydayDay: z.number().int().min(1).max(28),
+  paydayDay: z.number().int().min(1).max(31),
+  paydayDayEnd: z.number().int().min(1).max(31).optional(),
   nightlyTime: z.string().regex(/^\d{2}:\d{2}$/),
   locale: z.enum(["fr", "en"]),
   income: money,
@@ -110,9 +111,10 @@ app.post("/api/setup", async (c) => {
   const body = setupSchema.safeParse(await c.req.json().catch(() => null));
   if (!body.success) return c.json({ error: "invalid" }, 400);
   const data = body.data;
+  const paydayEnd = data.paydayDayEnd ?? data.paydayDay;
   await c.env.DB.prepare(
-    "UPDATE users SET name = ?, payday_day = ?, nightly_time = ?, locale = ?, onboarded = 1 WHERE id = ?",
-  ).bind(data.name, data.paydayDay, data.nightlyTime, data.locale, userId).run();
+    "UPDATE users SET name = ?, payday_day = ?, payday_day_end = ?, nightly_time = ?, locale = ?, onboarded = 1 WHERE id = ?",
+  ).bind(data.name, data.paydayDay, paydayEnd, data.nightlyTime, data.locale, userId).run();
   await c.env.DB.prepare(
     `INSERT INTO month_plans (id, user_id, month, income, savings_target, wishlist_budget)
      VALUES (?, ?, ?, ?, ?, ?)
@@ -151,7 +153,8 @@ app.put("/api/plan", async (c) => {
 
 const profileSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  paydayDay: z.number().int().min(1).max(28),
+  paydayDay: z.number().int().min(1).max(31),
+  paydayDayEnd: z.number().int().min(1).max(31).optional(),
   nightlyTime: z.string().regex(/^\d{2}:\d{2}$/),
   locale: z.enum(["fr", "en"]),
   theme: z.enum(["light", "dark", "system"]),
@@ -162,8 +165,9 @@ app.patch("/api/profile", async (c) => {
   const body = profileSchema.safeParse(await c.req.json().catch(() => null));
   if (!body.success) return c.json({ error: "invalid" }, 400);
   const data = body.data;
-  await c.env.DB.prepare("UPDATE users SET name = ?, payday_day = ?, nightly_time = ?, locale = ?, theme = ? WHERE id = ?")
-    .bind(data.name, data.paydayDay, data.nightlyTime, data.locale, data.theme, userId).run();
+  const paydayEnd = data.paydayDayEnd ?? data.paydayDay;
+  await c.env.DB.prepare("UPDATE users SET name = ?, payday_day = ?, payday_day_end = ?, nightly_time = ?, locale = ?, theme = ? WHERE id = ?")
+    .bind(data.name, data.paydayDay, paydayEnd, data.nightlyTime, data.locale, data.theme, userId).run();
   return c.json({ ok: true });
 });
 
@@ -512,13 +516,13 @@ export default app;
 
 async function ensureUser(c: { env: Env; executionCtx: { waitUntil(promise: Promise<unknown>): void } }, userId: string) {
   const existing = await c.env.DB.prepare(
-    "SELECT id, name, payday_day, nightly_time, timezone, locale, theme, onboarded, created_at FROM users WHERE id = ?",
+    "SELECT id, name, payday_day, payday_day_end, nightly_time, timezone, locale, theme, onboarded, created_at FROM users WHERE id = ?",
   ).bind(userId).first();
   if (existing) return existing;
   await c.env.DB.prepare("INSERT INTO users (id, name, timezone) VALUES (?, '', 'Africa/Douala')").bind(userId).run();
   c.executionCtx.waitUntil(sendWelcome(c.env, userId));
   return c.env.DB.prepare(
-    "SELECT id, name, payday_day, nightly_time, timezone, locale, theme, onboarded, created_at FROM users WHERE id = ?",
+    "SELECT id, name, payday_day, payday_day_end, nightly_time, timezone, locale, theme, onboarded, created_at FROM users WHERE id = ?",
   ).bind(userId).first();
 }
 

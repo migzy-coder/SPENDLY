@@ -124,6 +124,7 @@ export async function localSetup(payload: SetupPayload): Promise<void> {
   const user = ensureUser(state);
   user.name = payload.name;
   user.payday_day = payload.paydayDay;
+  user.payday_day_end = payload.paydayDayEnd ?? payload.paydayDay;
   user.nightly_time = payload.nightlyTime;
   user.locale = payload.locale;
   user.onboarded = 1;
@@ -192,6 +193,7 @@ export async function localSaveProfile(payload: ProfilePayload): Promise<void> {
   const user = ensureUser(state);
   user.name = payload.name;
   user.payday_day = payload.paydayDay;
+  user.payday_day_end = payload.paydayDayEnd ?? payload.paydayDay;
   user.nightly_time = payload.nightlyTime;
   user.locale = payload.locale;
   user.theme = payload.theme;

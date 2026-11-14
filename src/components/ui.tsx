@@ -220,6 +220,69 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
   );
 }
 
+export function AmountInput({
+  value,
+  onChange,
+  onAmountChange,
+  currency = "XAF",
+  className,
+  placeholder = "0",
+  ...rest
+}: {
+  value: string | number;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onAmountChange?: (amount: number, formatted: string) => void;
+  currency?: string;
+  className?: string;
+  placeholder?: string;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  const formatDigits = (digits: string) => {
+    const clean = digits.replace(/\D/g, "");
+    if (!clean) return "";
+    return Number(clean).toLocaleString("fr-FR").replace(/\u202F/g, " ");
+  };
+
+  const rawString = String(value ?? "");
+  const formattedValue = formatDigits(rawString);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawDigits = e.target.value.replace(/\D/g, "");
+    const numeric = rawDigits ? parseInt(rawDigits, 10) : 0;
+    const formatted = formatDigits(rawDigits);
+
+    // Call onAmountChange if provided
+    onAmountChange?.(numeric, formatted);
+
+    // Mutate event value so existing onChange(e) receiving e.target.value gets the formatted string
+    if (onChange) {
+      e.target.value = formatted;
+      onChange(e);
+    }
+  };
+
+  return (
+    <div className="relative flex items-center">
+      <input
+        type="tel"
+        inputMode="numeric"
+        placeholder={placeholder}
+        value={formattedValue}
+        onChange={handleChange}
+        className={cn(
+          "h-12 w-full rounded-[12px] border-[1.5px] border-hairline bg-soft pl-3.5 pr-14 text-[17px] font-semibold tracking-wide text-ink placeholder:font-normal placeholder:text-muted/70 focus:border-accent focus:outline-none",
+          className,
+        )}
+        {...rest}
+      />
+      {currency ? (
+        <span className="pointer-events-none absolute right-3.5 text-[13px] font-bold tracking-wider text-muted select-none">
+          {currency}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 /* Data display ------------------------------------------------------------ */
 
 export function CountUp({

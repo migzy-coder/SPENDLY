@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { Sheet } from "../components/Sheet";
-import { Button, Card, CountUp, Input, SectionHeader } from "../components/ui";
+import { AmountInput, Button, Card, CountUp, SectionHeader } from "../components/ui";
 import { PageGuide } from "../components/PageGuide";
 import { useI18n } from "../lib/i18n";
 import { formatXaf, monthKey } from "../lib/money";
@@ -294,25 +294,15 @@ function EditPlanSheet({
       <div className="flex flex-col gap-4 pb-2">
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("plan.income")}</span>
-          <Input type="tel" inputMode="numeric" value={incomeValue} onChange={(e) => setIncomeValue(e.target.value)} />
+          <AmountInput value={incomeValue} onChange={(e) => setIncomeValue(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("plan.savings")}</span>
-          <Input
-            type="tel"
-            inputMode="numeric"
-            value={savingsValue}
-            onChange={(e) => setSavingsValue(e.target.value)}
-          />
+          <AmountInput value={savingsValue} onChange={(e) => setSavingsValue(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("plan.wishlist")}</span>
-          <Input
-            type="tel"
-            inputMode="numeric"
-            value={wishlistValue}
-            onChange={(e) => setWishlistValue(e.target.value)}
-          />
+          <AmountInput value={wishlistValue} onChange={(e) => setWishlistValue(e.target.value)} />
         </label>
         <Button
           full

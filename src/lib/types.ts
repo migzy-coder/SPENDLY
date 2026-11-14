@@ -14,6 +14,7 @@ export type User = {
   id: string;
   name: string;
   payday_day: number;
+  payday_day_end?: number;
   nightly_time: string;
   timezone: string;
   locale: Locale;
@@ -153,6 +154,7 @@ export type Bootstrap = {
 export type SetupPayload = {
   name: string;
   paydayDay: number;
+  paydayDayEnd?: number;
   nightlyTime: string;
   locale: Locale;
   income: number;
@@ -173,6 +175,7 @@ export type PlanPayload = {
 export type ProfilePayload = {
   name: string;
   paydayDay: number;
+  paydayDayEnd?: number;
   nightlyTime: string;
   locale: Locale;
   theme: Theme;
