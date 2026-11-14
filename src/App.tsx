@@ -12,6 +12,7 @@ import { useFeature, type FeatureKey } from "./lib/features";
 const Welcome = lazy(() => import("./routes/Welcome").then((m) => ({ default: m.Welcome })));
 const SignInPage = lazy(() => import("./routes/SignIn").then((m) => ({ default: m.SignInPage })));
 const SignUpPage = lazy(() => import("./routes/SignIn").then((m) => ({ default: m.SignUpPage })));
+const SSOCallback = lazy(() => import("./routes/SignIn").then((m) => ({ default: m.SSOCallback })));
 const SetupPage = lazy(() => import("./routes/Setup").then((m) => ({ default: m.SetupPage })));
 const Today = lazy(() => import("./routes/Today").then((m) => ({ default: m.Today })));
 const Goals = lazy(() => import("./routes/Goals").then((m) => ({ default: m.Goals })));
@@ -85,8 +86,11 @@ export default function App() {
           children: [
             { index: true, element: <Navigate to="/plan" replace /> },
             { path: "welcome", element: <Welcome /> },
+            { path: "signin/*", element: <SignInPage /> },
             { path: "signin", element: <SignInPage /> },
+            { path: "signup/*", element: <SignUpPage /> },
             { path: "signup", element: <SignUpPage /> },
+            { path: "sso-callback", element: <SSOCallback /> },
             { path: "setup", element: <SetupPage /> },
             { path: "today", element: <Protected><FeatureGate feature="quickLog"><Today /></FeatureGate></Protected> },
             { path: "goals", element: <Protected><FeatureGate feature="wishlist"><Goals /></FeatureGate></Protected> },

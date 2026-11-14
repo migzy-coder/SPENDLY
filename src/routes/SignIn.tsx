@@ -1,9 +1,20 @@
-import { SignIn, SignUp } from "@clerk/react";
+import { AuthenticateWithRedirectCallback, SignIn, SignUp } from "@clerk/react";
 import { Link, useNavigate } from "react-router";
 import { Mascot } from "../components/Mascot";
 import { Button } from "../components/ui";
 import { useI18n } from "../lib/i18n";
 import { isDemoMode, useAuth } from "../lib/auth";
+
+export function SSOCallback() {
+  return (
+    <div className="grid min-h-[60vh] place-items-center">
+      <AuthenticateWithRedirectCallback
+        signInFallbackRedirectUrl="/plan"
+        signUpFallbackRedirectUrl="/setup"
+      />
+    </div>
+  );
+}
 
 function AuthShell({ children, title }: { children: React.ReactNode; title: string }) {
   const { t } = useI18n();
