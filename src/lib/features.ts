@@ -16,19 +16,19 @@ export type FeatureKey =
 
 export type FeatureFlags = Record<FeatureKey, boolean>;
 
-const STORAGE_KEY = "spendly.features.v1";
+const STORAGE_KEY = "spendly.features.v2";
 const ADMIN_KEY = "spendly.admin.ok";
 
-// Fundamentals-only defaults (Option A)
+// All features ship enabled. The admin portal can still hide any of them.
 export const DEFAULT_FLAGS: FeatureFlags = {
   plan: true,
-  quickLog: false,
-  stats: false,
-  wishlist: false,
-  activity: false,
-  calendar: false,
-  debts: false,
-  simulator: false,
+  quickLog: true,     // Today (Home)
+  wishlist: true,     // Goals & Wishes
+  stats: true,        // Stats
+  activity: true,
+  calendar: true,
+  debts: true,
+  simulator: true,
 };
 
 function readFlags(): FeatureFlags {

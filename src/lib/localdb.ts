@@ -144,6 +144,8 @@ export async function localSetup(payload: SetupPayload): Promise<void> {
       created_at: now(),
     });
   }
+  // Re-running setup replaces the fixed costs instead of piling them up.
+  state.fixedCosts = [];
   for (const cost of payload.fixedCosts) {
     state.fixedCosts.push({
       id: uid(),

@@ -7,7 +7,7 @@ import { I18nProvider } from "./lib/i18n";
 import { AppProviders, useBootstrap } from "./lib/store";
 import { ToastProvider } from "./components/Toast";
 import { UpdatePrompt } from "./components/UpdatePrompt";
-import { useFeature, type FeatureKey } from "./lib/features";
+import { useFeatures, type FeatureKey } from "./lib/features";
 
 const Welcome = lazy(() => import("./routes/Welcome").then((m) => ({ default: m.Welcome })));
 const SignInPage = lazy(() => import("./routes/SignIn").then((m) => ({ default: m.SignInPage })));
@@ -70,9 +70,13 @@ function Protected({ children }: { children: ReactNode }) {
   );
 }
 
+/** Sends a disabled feature back to the home tab that is actually available. */
 function FeatureGate({ feature, children }: { feature: FeatureKey; children: ReactNode }) {
-  const enabled = useFeature(feature);
-  if (!enabled) return <Navigate to="/plan" replace />;
+  const flags = useFeatures();
+  if (!flags[feature]) {
+    const fallback = flags.quickLog ? "/today" : flags.plan ? "/plan" : "/settings";
+    return <Navigate to={fallback} replace />;
+  }
   return <>{children}</>;
 }
 
@@ -84,7 +88,7 @@ export default function App() {
           path: "/",
           element: <RootLayout />,
           children: [
-            { index: true, element: <Navigate to="/plan" replace /> },
+            { index: true, element: <Navigate to="/today" replace /> },
             { path: "welcome", element: <Welcome /> },
             { path: "signin/*", element: <SignInPage /> },
             { path: "signin", element: <SignInPage /> },

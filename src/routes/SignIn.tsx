@@ -9,7 +9,7 @@ export function SSOCallback() {
   return (
     <div className="grid min-h-[60vh] place-items-center">
       <AuthenticateWithRedirectCallback
-        signInFallbackRedirectUrl="/plan"
+        signInFallbackRedirectUrl="/today"
         signUpFallbackRedirectUrl="/setup"
       />
     </div>
@@ -66,7 +66,7 @@ export function SignInPage() {
   if (isDemoMode) {
     return (
       <AuthShell title={t("auth.signIn")}>
-        <DemoContinue to="/plan" />
+        <DemoContinue to="/today" />
       </AuthShell>
     );
   }
@@ -83,7 +83,7 @@ export function SignInPage() {
               {email || name || (locale === "fr" ? "Session active" : "Active session")}
             </p>
           </div>
-          <Button full onClick={() => navigate("/plan", { replace: true })}>
+          <Button full onClick={() => navigate("/today", { replace: true })}>
             {locale === "fr" ? "Accéder à mon budget" : "Go to my budget"}
           </Button>
           <Button
@@ -102,7 +102,7 @@ export function SignInPage() {
 
   return (
     <AuthShell title={t("auth.signIn")}>
-      <SignIn routing="path" path="/signin" signUpUrl="/signup" fallbackRedirectUrl="/plan" />
+      <SignIn routing="path" path="/signin" signUpUrl="/signup" fallbackRedirectUrl="/today" />
       <p className="mt-4 text-center text-[14px] text-muted">
         <Link to="/signup" className="font-medium text-accent">
           {t("auth.signUp")}

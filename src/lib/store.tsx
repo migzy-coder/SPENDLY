@@ -8,7 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { createApi } from "./api";
 import type { Api } from "./api";
-import { currentTokenProvider, isDemoMode } from "./auth";import { todayISO } from "./money";
+import { currentTokenProvider, isDemoMode } from "./auth";
+import { todayISO } from "./money";
 import type { Bootstrap } from "./types";
 
 const tokenProvider = async (): Promise<string | null> => {

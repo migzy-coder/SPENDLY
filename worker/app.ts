@@ -128,6 +128,7 @@ app.post("/api/setup", async (c) => {
      VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id, month) DO UPDATE SET income = excluded.income, savings_target = excluded.savings_target, wishlist_budget = excluded.wishlist_budget`,
   ).bind(crypto.randomUUID(), userId, data.month, data.income, data.savingsTarget, data.wishlistBudget).run();
+  await c.env.DB.prepare("DELETE FROM fixed_costs WHERE user_id = ?").bind(userId).run();
   for (const cost of data.fixedCosts) {
     await c.env.DB.prepare("INSERT INTO fixed_costs (id, user_id, name, amount, recurring) VALUES (?, ?, ?, ?, 1)")
       .bind(crypto.randomUUID(), userId, cost.name, cost.amount).run();

@@ -128,10 +128,10 @@ export function SetupPage() {
       }
 
       await refresh();
-      navigate("/plan", { replace: true });
+      navigate("/today", { replace: true });
     } catch (err) {
       console.error("Setup error", err);
-      navigate("/plan", { replace: true });
+      navigate("/today", { replace: true });
     } finally {
       setBusy(false);
     }
@@ -144,13 +144,17 @@ export function SetupPage() {
         <span className="text-[13px] font-bold text-muted">
           {step + 1} / {steps.length}
         </span>
-        <button
-          type="button"
-          onClick={() => navigate("/plan")}
-          className="text-[14px] font-semibold text-accent transition-transform active:scale-95"
-        >
-          {t("common.skip")}
-        </button>
+        {data?.user?.onboarded ? (
+          <button
+            type="button"
+            onClick={() => navigate("/today")}
+            className="text-[14px] font-semibold text-accent transition-transform active:scale-95"
+          >
+            {t("common.skip")}
+          </button>
+        ) : (
+          <span />
+        )}
       </div>
 
       {/* Progress Line */}
@@ -589,7 +593,7 @@ export function SetupPage() {
         open={showInstallModal}
         onClose={() => {
           setShowInstallModal(false);
-          navigate("/plan", { replace: true });
+          navigate("/today", { replace: true });
         }}
       />
     </div>

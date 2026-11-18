@@ -34,7 +34,7 @@ export function Welcome() {
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      navigate("/plan", { replace: true });
+      navigate("/today", { replace: true });
     }
   }, [isLoaded, isSignedIn, navigate]);
 
