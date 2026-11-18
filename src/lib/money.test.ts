@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   allowanceAtDayStart,
+  cycleDaysRemaining,
+  cycleEnd,
+  cycleStart,
   dailyAllowance,
+  daysRemaining,
   debtSchedule,
   formatXaf,
   freeAmount,
@@ -39,6 +43,30 @@ describe("month plan", () => {
     expect(left({ ...base, income: 0 })).toBe(-85_000);
     expect(dailyAllowance(70_000, 0)).toBe(0);
     expect(dailyAllowance(-100, 5)).toBe(0);
+  });
+});
+
+describe("pay cycle", () => {
+  it("runs from payday to the day before the next payday", () => {
+    expect(cycleStart("2026-11-18", 25)).toBe("2026-10-25");
+    expect(cycleEnd("2026-11-18", 25)).toBe("2026-11-24");
+    expect(cycleDaysRemaining("2026-11-18", 25)).toBe(7);
+    expect(cycleStart("2026-11-25", 25)).toBe("2026-11-25");
+    expect(cycleEnd("2026-11-25", 25)).toBe("2026-12-24");
+    expect(cycleDaysRemaining("2026-11-25", 25)).toBe(30);
+  });
+
+  it("matches the calendar month when payday is the 1st", () => {
+    expect(cycleStart("2026-11-18", 1)).toBe("2026-11-01");
+    expect(cycleEnd("2026-11-18", 1)).toBe("2026-11-30");
+    expect(daysRemaining("2026-11-18", 1)).toBe(daysRemaining("2026-11-18"));
+  });
+
+  it("clamps paydays to short months", () => {
+    expect(cycleStart("2026-03-15", 31)).toBe("2026-02-28");
+    expect(cycleEnd("2026-03-15", 31)).toBe("2026-03-30");
+    expect(cycleStart("2026-02-27", 31)).toBe("2026-01-31");
+    expect(cycleEnd("2026-02-27", 31)).toBe("2026-02-27");
   });
 });
 

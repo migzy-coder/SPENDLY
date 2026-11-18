@@ -51,9 +51,54 @@ export function daysInMonth(dateISO: string): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-export function daysRemaining(dateISO: string): number {
+export function daysRemaining(dateISO: string, paydayDay?: number): number {
+  if (paydayDay) return cycleDaysRemaining(dateISO, paydayDay);
   const day = Number(dateISO.slice(8, 10));
   return Math.max(0, daysInMonth(dateISO) - day + 1);
+}
+
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+function clampPayday(paydayDay: number): number {
+  const day = Math.trunc(paydayDay);
+  if (!Number.isFinite(day) || day < 1) return DEFAULT_PAYDAY;
+  return Math.min(day, 31);
+}
+
+/** First day of the pay cycle that contains `dateISO` (payday clamped to short months). */
+export function cycleStart(dateISO: string, paydayDay: number = DEFAULT_PAYDAY): string {
+  const day = clampPayday(paydayDay);
+  const thisMonth = `${dateISO.slice(0, 7)}-01`;
+  const candidate = `${dateISO.slice(0, 7)}-${pad2(Math.min(day, daysInMonth(dateISO)))}`;
+  if (candidate <= dateISO) return candidate;
+  const previous = addMonths(thisMonth, -1);
+  return `${previous.slice(0, 7)}-${pad2(Math.min(day, daysInMonth(previous)))}`;
+}
+
+/** First day of the cycle that follows the one starting on `startISO`. */
+export function nextCycleStart(startISO: string, paydayDay: number = DEFAULT_PAYDAY): string {
+  const day = clampPayday(paydayDay);
+  const nextMonth = addMonths(`${startISO.slice(0, 7)}-01`, 1);
+  return `${nextMonth.slice(0, 7)}-${pad2(Math.min(day, daysInMonth(nextMonth)))}`;
+}
+
+/** Last day of the pay cycle that contains `dateISO`. */
+export function cycleEnd(dateISO: string, paydayDay: number = DEFAULT_PAYDAY): string {
+  return addDays(nextCycleStart(cycleStart(dateISO, paydayDay), paydayDay), -1);
+}
+
+/** Whole days between two calendar dates (positive when `toISO` is later). */
+export function daysBetween(fromISO: string, toISO: string): number {
+  const toUtc = (date: string) =>
+    Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8, 10)));
+  return Math.round((toUtc(toISO) - toUtc(fromISO)) / 86_400_000);
+}
+
+/** Days left in the pay cycle, today included. Never below one. */
+export function cycleDaysRemaining(dateISO: string, paydayDay: number = DEFAULT_PAYDAY): number {
+  return Math.max(1, daysBetween(dateISO, cycleEnd(dateISO, paydayDay)) + 1);
 }
 
 export function addDays(dateISO: string, days: number): string {

@@ -9,7 +9,7 @@ import { PaydayRangePicker } from "../components/PaydayRangePicker";
 import { TimePicker } from "../components/TimePicker";
 import { InstallPromptModal } from "../components/InstallPromptModal";
 import { useI18n } from "../lib/i18n";
-import { formatXaf, monthKey } from "../lib/money";
+import { cycleStart, formatXaf } from "../lib/money";
 import { useAuth } from "../lib/auth-context";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
 
@@ -91,7 +91,7 @@ export function SetupPage() {
     if (busy) return;
     setBusy(true);
     try {
-      const month = monthKey(today);
+      const month = cycleStart(today, paydayStart).slice(0, 7);
       const dueDate =
         hasGoal && goalName.trim() && goalTargetNum > 0
           ? new Date(Date.now() + goalMonths * 30 * 86400000).toISOString().slice(0, 10)

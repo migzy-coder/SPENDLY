@@ -59,6 +59,8 @@ npx wrangler deploy
 ## Conventions
 
 - Money is stored as whole XAF integers; dates are `YYYY-MM-DD` in `Africa/Douala`.
+- Budget cycles start on the saved payday (first day of the payday window) and end the day
+  before the next one; plan records are keyed by the month the cycle starts in.
 - UI copy lives in `src/lib/i18n/fr.ts` (source dictionary) and `src/lib/i18n/en.ts` (typed mirror),
   so a missing key fails the typecheck.
 - Feature flags live in `src/lib/features.ts`; all features ship enabled and `/admin` can hide them.

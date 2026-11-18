@@ -19,7 +19,8 @@ export function Calendar() {
   const month = Number(today.slice(5, 7));
   const total = daysInMonth(today);
   const firstWeekday = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
-  const paydayDay = data?.user?.payday_day ?? 25;
+  const paydayStart = data?.user?.payday_day ?? 25;
+  const paydayEnd = Math.max(paydayStart, data?.user?.payday_day_end ?? paydayStart);
 
   const cells = useMemo(() => {
     const list: (string | null)[] = [];
@@ -92,7 +93,8 @@ export function Calendar() {
               const spent = spentByDay.get(date) ?? 0;
               const planned = plannedByDay.get(date) ?? 0;
               const isToday = date === today;
-              const isPayday = day === paydayDay;
+              const isPaydayStart = day === paydayStart;
+              const isPaydayWindow = day >= paydayStart && day <= paydayEnd;
               const isSelected = date === selected;
               const isFuture = date > today;
               return (
@@ -104,16 +106,18 @@ export function Calendar() {
                   className={`flex min-h-[52px] flex-col items-center justify-center rounded-[14px] text-[15px] ${
                     isToday
                       ? "bg-accent text-white"
-                      : isPayday
+                      : isPaydayStart
                         ? "bg-gold text-gold-ink"
-                        : isSelected
-                          ? "outline-2 outline-accent"
-                          : ""
+                        : isPaydayWindow
+                          ? "bg-gold/35 text-gold-ink"
+                          : isSelected
+                            ? "outline-2 outline-accent"
+                            : ""
                   }`}
                 >
                   <span className={isToday ? "text-white" : ""}>{day}</span>
                   <small className="text-[10px] leading-tight">
-                    {isPayday && !isToday
+                    {isPaydayStart && !isToday
                       ? t("calendar.payday")
                       : spent
                         ? `${Math.round(spent / 100) / 10}k`

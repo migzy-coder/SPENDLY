@@ -6,8 +6,8 @@ import { Sheet } from "../components/Sheet";
 import { AmountInput, Button, Card, CountUp, SectionHeader } from "../components/ui";
 import { PageGuide } from "../components/PageGuide";
 import { useI18n } from "../lib/i18n";
-import { formatXaf, monthKey } from "../lib/money";
-import { buildMonthState } from "../lib/selectors";
+import { formatXaf } from "../lib/money";
+import { buildMonthState, planForCycle } from "../lib/selectors";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
 import { useToast } from "../components/Toast";
 import { useFeatures } from "../lib/features";
@@ -15,7 +15,7 @@ import { useFeatures } from "../lib/features";
 export function Plan() {
   const { data } = useBootstrap();
   const today = useToday();
-  const { t, locale } = useI18n();
+  const { t, locale, formatDate } = useI18n();
   const navigate = useNavigate();
   const refresh = useRefresh();
   const { show } = useToast();
@@ -24,8 +24,8 @@ export function Plan() {
 
   const state = useMemo(() => (data ? buildMonthState(data, today) : null), [data, today]);
   const plan = useMemo(
-    () => data?.plans.find((item) => item.month === monthKey(today)) ?? data?.plans[0] ?? null,
-    [data, today],
+    () => (data && state ? planForCycle(data.plans, state.month) : null),
+    [data, state],
   );
 
   const planned = useMemo(
@@ -66,6 +66,12 @@ export function Plan() {
         <p className="mt-1 text-[52px] leading-none font-bold tracking-[-0.03em]">
           <CountUp value={state.left} />
           <span className="ml-1.5 text-[16px] font-semibold text-muted">XAF</span>
+        </p>
+        <p className="mt-2 text-[13px] text-muted">
+          {t("plan.cycleRange", {
+            from: formatDate(state.periodStart, { day: "numeric", month: "short" }),
+            to: formatDate(state.periodEnd, { day: "numeric", month: "short" }),
+          })}
         </p>
       </header>
 
@@ -255,7 +261,7 @@ export function Plan() {
         wishlist={plan?.wishlist_budget ?? 0}
         onSave={async (next) => {
           await api.savePlan({
-            month: monthKey(today),
+            month: state.month,
             income: next.income,
             savingsTarget: next.savings,
             wishlistBudget: next.wishlist,
