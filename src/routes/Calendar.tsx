@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { NavBar } from "../components/NavBar";
 import { Mascot } from "../components/Mascot";
+import { PageGuide } from "../components/PageGuide";
 import { Card, SectionHeader, Tag } from "../components/ui";
 import { useI18n } from "../lib/i18n";
 import { addDays, daysInMonth, formatXaf } from "../lib/money";
@@ -72,6 +73,14 @@ export function Calendar() {
       <NavBar title={monthLabel} backLabel={t("nav.today")} />
 
       <div className="flex flex-col gap-4 px-5 pt-2">
+        <PageGuide
+          id="calendar"
+          title={t("guide.calendarTitle")}
+          steps={[
+            { title: t("guide.calendarStep1Title"), body: t("guide.calendarStep1Body") },
+            { title: t("guide.calendarStep2Title"), body: t("guide.calendarStep2Body") },
+          ]}
+        />
         <Card className="flex items-center gap-3 p-4">
           <Mascot pose="calendar" size={86} />
           <div className="min-w-0 flex-1">

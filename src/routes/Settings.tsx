@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
+import { PageGuide, resetGuides } from "../components/PageGuide";
 import { Sheet } from "../components/Sheet";
 import { Button, Capsule, Card, Group, Input, ListRow, SectionHeader, Segmented, Switch } from "../components/ui";
 import { PaydayRangePicker } from "../components/PaydayRangePicker";
@@ -20,6 +21,7 @@ export function Settings() {
   const { signOut, isDemo } = useAuth();
   const navigate = useNavigate();
   const { show } = useToast();
+  const refresh = useRefresh();
   const [theme, setTheme] = useState<ThemeMode>(() => readTheme());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -49,6 +51,15 @@ export function Settings() {
       <NavBar title={t("settings.title")} />
 
       <div className="flex flex-col gap-4 px-5 pt-2">
+        <PageGuide
+          id="settings"
+          title={t("guide.settingsTitle")}
+          steps={[
+            { title: t("guide.settingsStep1Title"), body: t("guide.settingsStep1Body") },
+            { title: t("guide.settingsStep2Title"), body: t("guide.settingsStep2Body") },
+            { title: t("guide.settingsStep3Title"), body: t("guide.settingsStep3Body") },
+          ]}
+        />
         <Card className="flex items-center gap-3 p-4">
           <Mascot pose="settings" size={80} />
           <div className="min-w-0 flex-1">
@@ -89,10 +100,10 @@ export function Settings() {
         <Card className="p-4">
           <Segmented
             value={locale}
-            onChange={(value) => {
+            onChange={async (value) => {
               setLocale(value);
               if (data?.user) {
-                void api.saveProfile({
+                await api.saveProfile({
                   name: data.user.name,
                   paydayDay: data.user.payday_day,
                   paydayDayEnd: data.user.payday_day_end,
@@ -100,6 +111,7 @@ export function Settings() {
                   locale: value,
                   theme,
                 });
+                await refresh();
               }
             }}
             options={[
@@ -113,11 +125,11 @@ export function Settings() {
         <Card className="p-4">
           <Segmented
             value={theme}
-            onChange={(value) => {
+            onChange={async (value) => {
               setTheme(value);
               applyTheme(value);
               if (data?.user) {
-                void api.saveProfile({
+                await api.saveProfile({
                   name: data.user.name,
                   paydayDay: data.user.payday_day,
                   paydayDayEnd: data.user.payday_day_end,
@@ -125,6 +137,7 @@ export function Settings() {
                   locale,
                   theme: value,
                 });
+                await refresh();
               }
             }}
             options={[
@@ -210,7 +223,7 @@ export function Settings() {
 
 export function ProfileSettings() {
   const { data } = useBootstrap();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const refresh = useRefresh();
   const { show } = useToast();
   const [name, setName] = useState(data?.user?.name ?? "");
@@ -253,8 +266,8 @@ export function ProfileSettings() {
               paydayDay: paydayStart,
               paydayDayEnd: paydayEnd,
               nightlyTime: /^\d{2}:\d{2}$/.test(nightlyTime) ? nightlyTime : "21:00",
-              locale: data?.user?.locale ?? "fr",
-              theme: data?.user?.theme ?? "light",
+              locale,
+              theme: readTheme(),
             });
             await refresh();
             show(t("common.saved"));
@@ -367,6 +380,19 @@ export function Reminders() {
 export function Help() {
   const { t } = useI18n();
   const { isDemo } = useAuth();
+  const navigate = useNavigate();
+  const { show } = useToast();
+
+  const pages = [
+    { path: "/today", icon: "home" as const, title: t("nav.today"), body: t("guide.todayStep1Body") },
+    { path: "/goals", icon: "target" as const, title: t("goals.title"), body: t("guide.goalsStep1Body") },
+    { path: "/stats", icon: "stats" as const, title: t("stats.title"), body: t("guide.statsStep1Body") },
+    { path: "/activity", icon: "receipt" as const, title: t("activity.title"), body: t("guide.activityStep1Body") },
+    { path: "/calendar", icon: "calendar" as const, title: t("calendar.title"), body: t("guide.calendarStep1Body") },
+    { path: "/debts", icon: "wallet" as const, title: t("debts.title"), body: t("guide.debtsStep1Body") },
+    { path: "/simulator", icon: "play" as const, title: t("simulator.title"), body: t("guide.simulatorStep1Body") },
+    { path: "/settings", icon: "settings" as const, title: t("settings.title"), body: t("guide.settingsStep1Body") },
+  ];
 
   return (
     <div className="pb-6">
@@ -374,16 +400,35 @@ export function Help() {
       <div className="flex flex-col gap-4 px-5 pt-2">
         <Card className="flex flex-col items-center gap-2 p-6 text-center">
           <Mascot pose="help" size={140} />
-          <p className="text-[17px] font-bold">{t("settings.help")}</p>
-          <p className="max-w-[260px] text-[14px] text-muted">{t("app.tagline")}</p>
+          <p className="text-[17px] font-bold">{t("guide.hubTitle")}</p>
+          <p className="max-w-[280px] text-[14px] text-muted">{t("guide.hubBody")}</p>
         </Card>
 
         <SectionHeader title={t("settings.title")} />
         <Group>
-          <ListRow icon="receipt" title={t("checkin.title")} subtitle={t("checkin.spentNothing")} />
-          <ListRow icon="target" title={t("goals.title")} subtitle={t("goals.smallStepsBody")} />
-          <ListRow icon="stats" title={t("stats.title")} subtitle={t("stats.needDays")} />
+          {pages.map((page) => (
+            <ListRow
+              key={page.path}
+              icon={page.icon}
+              title={page.title}
+              subtitle={page.body}
+              onClick={() => navigate(page.path)}
+              trailing={<Icon name="chevronRight" size={18} className="shrink-0 text-muted" />}
+            />
+          ))}
         </Group>
+
+        <Button
+          variant="outline"
+          full
+          onClick={() => {
+            resetGuides();
+            show(t("guide.replayDone"));
+          }}
+        >
+          <Icon name="refresh" size={17} className="mr-2" />
+          {t("guide.replayGuides")}
+        </Button>
 
         <SectionHeader title="Contact" />
         <Group>

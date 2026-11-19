@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
+import { PageGuide } from "../components/PageGuide";
 import { Bars, Card, CountUp, Donut, SectionHeader, Segmented } from "../components/ui";
 import { useI18n } from "../lib/i18n";
 import { addDays, addMonths, formatXaf } from "../lib/money";
@@ -137,6 +138,15 @@ export function Stats() {
       </header>
 
       <div className="mt-4 flex flex-col gap-4 px-5">
+        <PageGuide
+          id="stats"
+          title={t("guide.statsTitle")}
+          steps={[
+            { title: t("guide.statsStep1Title"), body: t("guide.statsStep1Body") },
+            { title: t("guide.statsStep2Title"), body: t("guide.statsStep2Body") },
+            { title: t("guide.statsStep3Title"), body: t("guide.statsStep3Body") },
+          ]}
+        />
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"

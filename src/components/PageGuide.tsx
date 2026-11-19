@@ -30,6 +30,15 @@ function markSeen(id: string) {
   }
 }
 
+/** Forget every page guide so they show again on the next visit. */
+export function resetGuides() {
+  try {
+    localStorage.removeItem(SEEN_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Per-page guidance: shows on first visit and can be reopened. */
 export function PageGuide({ id, title, steps }: { id: string; title: string; steps: GuideStep[] }) {
   const { t } = useI18n();

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, Outlet } from "react-router";
 import { useState } from "react";
 import { AddSheet } from "./AddSheet";
@@ -23,15 +23,19 @@ export function RootLayout() {
     ...(features.plan ? ["/plan"] : []),
   ];
   const showTabs = tabRoutes.includes(location.pathname);
+  const appliedLocale = useRef<{ userId: string; locale: string } | null>(null);
 
-  // The appearance and language stored with the account win over the local ones.
+  // The appearance and language stored with the account win over the local ones,
+  // but only once per account/value: a choice made during onboarding or in
+  // Settings must not be overwritten by the (still stale) cached profile.
   useEffect(() => {
     const stored = data?.user?.theme;
     if (stored && stored !== readTheme()) applyTheme(stored);
-    const userLocale = data?.user?.locale;
-    if (userLocale && (userLocale === "fr" || userLocale === "en") && userLocale !== locale) {
-      setLocale(userLocale);
-    }
+    const user = data?.user;
+    if (!user?.onboarded || (user.locale !== "fr" && user.locale !== "en")) return;
+    if (appliedLocale.current?.userId === user.id && appliedLocale.current.locale === user.locale) return;
+    appliedLocale.current = { userId: user.id, locale: user.locale };
+    if (user.locale !== locale) setLocale(user.locale);
   }, [data, locale, setLocale]);
 
   return (

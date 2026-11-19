@@ -1,13 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Mascot } from "../components/Mascot";
 import { Icon } from "../components/Icon";
 import { Button, Card, CountUp, SectionHeader, Tag, cn } from "../components/ui";
+import { PageGuide } from "../components/PageGuide";
+import { AddSheet } from "../components/AddSheet";
 import { useI18n } from "../lib/i18n";
 import { CATEGORIES, formatXaf } from "../lib/money";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
 import { buildMonthState, entriesForDay } from "../lib/selectors";
-import { useState } from "react";
 import { useToast } from "../components/Toast";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -33,6 +34,7 @@ export function Today() {
   const refresh = useRefresh();
   const { show } = useToast();
   const [busy, setBusy] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const state = useMemo(() => (data ? buildMonthState(data, today) : null), [data, today]);
   const hour = Number(
@@ -114,14 +116,24 @@ export function Today() {
             <p className="text-[14px] text-muted">{t(greetingKey(hour))}</p>
             <h1 className="text-[30px] leading-tight font-bold tracking-[-0.025em]">{firstName}</h1>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate("/calendar")}
-            aria-label={t("calendar.title")}
-            className="grid h-11 w-11 place-items-center rounded-full bg-surface shadow-card active:scale-95"
-          >
-            <Icon name="calendar" size={21} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/calendar")}
+              aria-label={t("calendar.title")}
+              className="grid h-11 w-11 place-items-center rounded-full bg-surface shadow-card active:scale-95"
+            >
+              <Icon name="calendar" size={21} />
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/settings")}
+              aria-label={t("settings.title")}
+              className="grid h-11 w-11 place-items-center rounded-full bg-accent-tint text-[16px] font-bold text-accent shadow-card active:scale-95"
+            >
+              {firstName ? firstName.slice(0, 1).toUpperCase() : <Icon name="settings" size={21} />}
+            </button>
+          </div>
         </div>
 
         <p className="mt-6 text-[12px] font-semibold tracking-[0.14em] text-muted">{t("today.leftToSpend")}</p>
@@ -155,6 +167,15 @@ export function Today() {
       </header>
 
       <div className="mt-5 flex flex-col gap-4 px-5">
+        <PageGuide
+          id="today"
+          title={t("guide.todayTitle")}
+          steps={[
+            { title: t("guide.todayStep1Title"), body: t("guide.todayStep1Body") },
+            { title: t("guide.todayStep2Title"), body: t("guide.todayStep2Body") },
+            { title: t("guide.todayStep3Title"), body: t("guide.todayStep3Body") },
+          ]}
+        />
         <Card className="flex items-center gap-3 p-4">
           <Mascot pose="home" size={84} />
           <div className="min-w-0 flex-1">
@@ -234,6 +255,10 @@ export function Today() {
           <Card className="flex flex-col items-center gap-2 p-6 text-center">
             <Mascot pose="empty" size={130} />
             <p className="text-[15px] font-semibold">{t("today.noEntries")}</p>
+            <p className="max-w-[240px] text-[13px] text-muted">{t("guide.todayEmptyBody")}</p>
+            <Button size="md" className="mt-2" onClick={() => setAddOpen(true)}>
+              {t("nav.add")}
+            </Button>
           </Card>
         )}
 
@@ -315,6 +340,8 @@ export function Today() {
           {t("settings.storageNote")} · <Link to="/settings" className="text-accent">{t("settings.title")}</Link>
         </p>
       </div>
+
+      <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

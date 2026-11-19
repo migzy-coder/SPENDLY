@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
+import { PageGuide } from "../components/PageGuide";
 import { AmountInput, Button, Card, Capsule, CountUp, EmptyState, Input, ProgressBar, Ring, SectionHeader, Tag } from "../components/ui";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n";
@@ -96,6 +97,15 @@ export function Goals() {
       </header>
 
       <div className="mt-5 flex flex-col gap-4 px-5">
+        <PageGuide
+          id="goals"
+          title={t("guide.goalsTitle")}
+          steps={[
+            { title: t("guide.goalsStep1Title"), body: t("guide.goalsStep1Body") },
+            { title: t("guide.goalsStep2Title"), body: t("guide.goalsStep2Body") },
+            { title: t("guide.goalsStep3Title"), body: t("guide.goalsStep3Body") },
+          ]}
+        />
         <Card className="flex items-center gap-3 p-4">
           <Mascot pose="categories" size={84} />
           <div className="min-w-0 flex-1">

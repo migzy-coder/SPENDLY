@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
+import { PageGuide } from "../components/PageGuide";
 import { Button, Card, Capsule, Input, ProgressBar, Tag } from "../components/ui";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n";
@@ -135,6 +136,14 @@ export function Simulator() {
       <NavBar title={t("simulator.title")} subtitle={t("simulator.intro")} />
 
       <div className="flex flex-col gap-4 px-5 pt-2">
+        <PageGuide
+          id="simulator"
+          title={t("guide.simulatorTitle")}
+          steps={[
+            { title: t("guide.simulatorStep1Title"), body: t("guide.simulatorStep1Body") },
+            { title: t("guide.simulatorStep2Title"), body: t("guide.simulatorStep2Body") },
+          ]}
+        />
         <div>
           <p className="mb-2 px-1 text-[13px] font-medium text-muted">{t("simulator.activity")}</p>
           <div className="flex flex-wrap gap-2">

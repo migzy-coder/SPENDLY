@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
+import { PageGuide } from "../components/PageGuide";
 import { Sheet } from "../components/Sheet";
 import { Button, Card, Capsule, EmptyState, Input } from "../components/ui";
 import { useToast } from "../components/Toast";
@@ -61,6 +62,14 @@ export function Activity() {
       </div>
 
       <div className="mt-2 flex flex-col gap-4 px-5">
+        <PageGuide
+          id="activity"
+          title={t("guide.activityTitle")}
+          steps={[
+            { title: t("guide.activityStep1Title"), body: t("guide.activityStep1Body") },
+            { title: t("guide.activityStep2Title"), body: t("guide.activityStep2Body") },
+          ]}
+        />
         {grouped.length ? (
           grouped.map((group) => {
             const dayTotal = group.items.reduce((sum, entry) => sum + entry.amount, 0);

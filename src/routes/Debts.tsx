@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { Icon } from "../components/Icon";
 import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
+import { PageGuide } from "../components/PageGuide";
 import { Button, Card, Capsule, EmptyState, Input, ProgressBar } from "../components/ui";
 import { useToast } from "../components/Toast";
 import { useI18n } from "../lib/i18n";
@@ -28,6 +29,14 @@ export function Debts() {
         }
       />
       <div className="flex flex-col gap-3 px-5 pt-2">
+        <PageGuide
+          id="debts"
+          title={t("guide.debtsTitle")}
+          steps={[
+            { title: t("guide.debtsStep1Title"), body: t("guide.debtsStep1Body") },
+            { title: t("guide.debtsStep2Title"), body: t("guide.debtsStep2Body") },
+          ]}
+        />
         {debts.length ? (
           debts.map((debt) => {
             const payments = (data?.payments ?? []).filter((payment) => payment.debt_id === debt.id);
