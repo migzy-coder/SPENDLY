@@ -1,0 +1,942 @@
+<!doctype html>
+<html
+  lang="fr"
+  data-resolution="portrait"
+  data-composition-variables='[
+    {"id":"color-ground","type":"color","label":"Background","default":"#FAF7F0"},
+    {"id":"color-ink","type":"color","label":"Ink","default":"#15233E"},
+    {"id":"color-accent","type":"color","label":"Accent","default":"#2F6BF0"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --ground: #faf7f0;
+        --surface: #ffffff;
+        --soft: #f3efe6;
+        --hairline: #e9e3d6;
+        --ink: #15233e;
+        --muted: #5f6c86;
+        --muted-strong: #4f5c74;
+        --accent: #2f6bf0;
+        --accent-text: #2456cb;
+        --tint: #e6eeff;
+        --gold: #f5b83d;
+        --success: #12805f;
+        --success-text: #0d6b4f;
+        --success-tint: #e3f4ea;
+        --food: #d94a35;
+        --transport: #2f6bf0;
+        --airtime: #12805f;
+        --font: Inter, "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--ground);
+        font-family: var(--font);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+      }
+      #bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(720px 540px at 86% 8%, rgba(47, 107, 240, 0.1), transparent 62%),
+          radial-gradient(640px 460px at 8% 96%, rgba(245, 184, 61, 0.1), transparent 66%),
+          var(--ground);
+        z-index: 0;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+      }
+      .center {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+      .label {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .money {
+        font-weight: 900;
+        letter-spacing: -0.045em;
+        line-height: 0.9;
+        font-variant-numeric: tabular-nums;
+      }
+      .num-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 18px;
+      }
+      .money .cur {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--muted);
+      }
+      .rule {
+        height: 5px;
+        width: 132px;
+        border-radius: 4px;
+        background: var(--accent);
+        transform-origin: left center;
+      }
+      .card {
+        background: var(--surface);
+        border-radius: 30px;
+        box-shadow: 0 2px 4px rgba(60, 50, 30, 0.06), 0 22px 60px rgba(60, 50, 30, 0.13);
+      }
+      /* Scene 1 */
+      #s1-label {
+        top: 520px;
+      }
+      #s1-num {
+        top: 600px;
+        font-size: 196px;
+      }
+      #s1-num .cur {
+        font-size: 68px;
+      }
+      #s1-rule {
+        top: 840px;
+        left: 496px;
+        position: absolute;
+      }
+      #s1-q {
+        top: 910px;
+        font-size: 54px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+      #s1-q2 {
+        top: 984px;
+        font-size: 42px;
+        font-weight: 500;
+        color: var(--muted);
+        letter-spacing: -0.01em;
+      }
+      /* Scene 2 */
+      #s2-icon {
+        position: absolute;
+        top: 414px;
+        left: 488px;
+        width: 104px;
+        height: 104px;
+        border-radius: 26px;
+        box-shadow: 0 2px 4px rgba(20, 40, 90, 0.1), 0 18px 42px rgba(47, 107, 240, 0.28);
+      }
+      #s2-num {
+        top: 588px;
+        font-size: 226px;
+        color: var(--accent);
+      }
+      #s2-unit {
+        top: 852px;
+        font-size: 52px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      #s2-card {
+        position: absolute;
+        top: 1060px;
+        left: 260px;
+        width: 560px;
+        padding: 34px 40px;
+        font-size: 36px;
+        font-weight: 600;
+        line-height: 1.3;
+        text-align: center;
+        color: var(--ink);
+      }
+      /* Scene 3 / phone */
+      #phone {
+        position: absolute;
+        top: 288px;
+        left: 140px;
+        width: 800px;
+        height: 1080px;
+        border-radius: 56px;
+        padding: 60px;
+        z-index: 2;
+      }
+      #p-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 46px;
+      }
+      #p-word {
+        font-size: 32px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+      }
+      #p-payday {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: #fdf1d6;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #7a5310;
+      }
+      #p-payday i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gold);
+        display: block;
+      }
+      #p-greet {
+        margin-top: 24px;
+        font-size: 46px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+      #p-greet-sub {
+        margin-top: 2px;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      #p-label {
+        margin-top: 30px;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        color: var(--accent-text);
+      }
+      #p-num {
+        margin-top: 8px;
+        font-size: 148px;
+      }
+      #p-num .cur {
+        font-size: 34px;
+      }
+      #p-allow {
+        margin-top: 14px;
+        font-size: 32px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      #p-div {
+        margin: 28px 0 0;
+        height: 2px;
+        background: var(--hairline);
+        transform-origin: left center;
+      }
+      #p-streak {
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      #p-streak i {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--accent);
+        display: block;
+      }
+      #p-chips {
+        margin-top: 26px;
+        display: flex;
+        gap: 14px;
+      }
+      .p-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 22px;
+        border-radius: 999px;
+        background: var(--soft);
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .p-chip i {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: block;
+      }
+      #p-spend-title {
+        margin-top: 34px;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--muted-strong);
+      }
+      .p-row {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 28px;
+      }
+      .p-row b {
+        width: 160px;
+        font-weight: 700;
+      }
+      .p-row .track {
+        flex: 1;
+        height: 14px;
+        border-radius: 8px;
+        background: var(--soft);
+        overflow: hidden;
+      }
+      .p-row .track i {
+        display: block;
+        height: 100%;
+        border-radius: 8px;
+        transform-origin: left center;
+      }
+      .p-row .amt {
+        width: 112px;
+        text-align: right;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      #fab {
+        position: absolute;
+        right: 48px;
+        bottom: 48px;
+        width: 108px;
+        height: 108px;
+        border-radius: 50%;
+        background: var(--accent);
+        display: grid;
+        place-items: center;
+        box-shadow: 0 10px 26px rgba(47, 107, 240, 0.38);
+      }
+      #fab svg {
+        width: 46px;
+        height: 46px;
+        stroke: #fff;
+        stroke-width: 3;
+        stroke-linecap: round;
+        fill: none;
+      }
+      #ripple {
+        position: absolute;
+        right: 54px;
+        bottom: 54px;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        border: 3px solid var(--accent);
+        opacity: 0;
+      }
+      /* Scene 4 sheet */
+      #s4 {
+        z-index: 3;
+      }
+      #s4-scrim {
+        position: absolute;
+        inset: 0;
+        background: #0b1428;
+        opacity: 0;
+      }
+      #sheet {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 1080px;
+        height: 900px;
+        background: var(--surface);
+        border-radius: 44px 44px 0 0;
+        box-shadow: 0 -18px 60px rgba(20, 30, 60, 0.22);
+        padding: 32px 48px 36px;
+      }
+      #sheet-handle {
+        width: 96px;
+        height: 8px;
+        border-radius: 6px;
+        background: #d8d2c4;
+        margin: 0 auto 20px;
+      }
+      #sheet-title {
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+      #sheet-quick {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      #sheet-quick span {
+        padding: 12px 22px;
+        border-radius: 999px;
+        background: var(--soft);
+        font-size: 28px;
+        font-weight: 700;
+      }
+      #sheet-cat-label {
+        margin-top: 20px;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      #sheet-cats {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .sheet-cat {
+        height: 68px;
+        border-radius: 16px;
+        background: var(--soft);
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--ink);
+        border: 3px solid transparent;
+      }
+      #sheet-amount-label {
+        margin-top: 20px;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      #sheet-amount {
+        margin-top: 8px;
+        height: 80px;
+        border-radius: 18px;
+        background: var(--soft);
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      #sheet-caret {
+        width: 3px;
+        height: 40px;
+        background: var(--accent);
+        margin-left: 6px;
+      }
+      #sheet-pay-label {
+        margin-top: 18px;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      #sheet-pays {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .sheet-pay {
+        flex: 1;
+        height: 64px;
+        border-radius: 16px;
+        background: var(--soft);
+        display: grid;
+        place-items: center;
+        font-size: 28px;
+        font-weight: 600;
+        border: 3px solid transparent;
+      }
+      #sheet-save {
+        margin-top: 20px;
+        height: 88px;
+        border-radius: 20px;
+        background: var(--accent);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      #s4-caption {
+        top: 1500px;
+        font-size: 44px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--accent-text);
+      }
+      /* Scene 5 */
+      #s5-label {
+        top: 420px;
+      }
+      #s5-title {
+        top: 480px;
+        font-size: 56px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+      }
+      #s5-sub {
+        top: 570px;
+        font-size: 30px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      #s5-cost {
+        position: absolute;
+        top: 690px;
+        left: 200px;
+        width: 680px;
+        padding: 34px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      #s5-cost .name {
+        font-size: 42px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+      #s5-cost .val {
+        font-size: 40px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      #s5-cost .hint {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      #s5-verdict {
+        position: absolute;
+        top: 900px;
+        left: 200px;
+        width: 680px;
+        padding: 36px 40px;
+        background: var(--success-tint);
+        border-radius: 30px;
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        box-shadow: 0 18px 46px rgba(18, 128, 95, 0.16);
+      }
+      #s5-check {
+        width: 62px;
+        height: 62px;
+        flex: 0 0 62px;
+        border-radius: 50%;
+        background: var(--success);
+        display: grid;
+        place-items: center;
+      }
+      #s5-check svg {
+        width: 34px;
+        height: 34px;
+        stroke: #fff;
+        stroke-width: 4;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #s5-verdict .vtext {
+        max-width: 440px;
+      }
+      #s5-verdict .vtitle {
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: var(--success-text);
+      }
+      #s5-verdict .vbody {
+        margin-top: 8px;
+        font-size: 29px;
+        font-weight: 500;
+        color: #2f6f5c;
+        line-height: 1.34;
+      }
+      /* Scene 6 */
+      #s6-icon {
+        position: absolute;
+        top: 470px;
+        left: 450px;
+        width: 180px;
+        height: 180px;
+        border-radius: 44px;
+        box-shadow: 0 4px 8px rgba(20, 40, 90, 0.1), 0 26px 60px rgba(47, 107, 240, 0.26);
+      }
+      #s6-word {
+        top: 680px;
+        font-size: 118px;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+      }
+      #s6-tag {
+        top: 860px;
+        font-size: 50px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        color: var(--accent-text);
+      }
+      #s6-product {
+        top: 1020px;
+        left: 140px;
+        right: 140px;
+        font-size: 34px;
+        font-weight: 500;
+        line-height: 1.42;
+        color: var(--muted);
+      }
+      #s6-foot {
+        top: 1120px;
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.4;
+        letter-spacing: 0.02em;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="22.6"
+      data-width="1080"
+      data-height="1920"
+    >
+      <div id="bg"></div>
+
+      <!-- 1. The arithmetic -->
+      <section id="s1" class="clip scene" data-start="0" data-duration="3">
+        <p id="s1-label" class="center label">Jusqu'à la paie</p>
+        <div id="s1-num" class="center money num-row">
+          <span id="s1-number">28 000</span><span class="cur">F</span>
+        </div>
+        <div id="s1-rule" class="rule"></div>
+        <p id="s1-q" class="center">9 jours à tenir.</p>
+        <p id="s1-q2" class="center">Combien par jour ?</p>
+      </section>
+
+      <!-- 2. The answer -->
+      <section id="s2" class="clip scene" data-start="3" data-duration="3.1">
+        <img id="s2-icon" src="assets/brand/icon.png" alt="" />
+        <div id="s2-num" class="center money num-row">
+          <span id="s2-number">0</span><span class="cur" style="font-size: 74px">F</span>
+        </div>
+        <p id="s2-unit" class="center">par jour</p>
+        <div id="s2-card" class="card">
+          Tu peux dépenser environ 3 100 XAF aujourd'hui
+        </div>
+      </section>
+
+      <!-- 3. The Today screen -->
+      <section id="s3" class="clip scene" data-start="6.1" data-duration="4.7"></section>
+
+      <div id="phone" class="clip card" data-start="6.1" data-duration="10.3">
+        <div id="p-meta">
+          <span id="p-word">Spendly</span>
+          <span id="p-payday"><i></i>PAIE · 24–28</span>
+        </div>
+        <p id="p-greet">Bonsoir, Miguel</p>
+        <p id="p-greet-sub">Ton point du soir</p>
+        <p id="p-label">À DÉPENSER</p>
+        <div id="p-num" class="money num-row">
+          <span id="p-number">28 000</span><span class="cur">XAF</span>
+        </div>
+        <p id="p-allow">Tu peux dépenser environ 3 100 XAF aujourd'hui</p>
+        <div id="p-div"></div>
+        <div id="p-streak"><i></i>4 jours d'affilée</div>
+        <div id="p-chips">
+          <span class="p-chip"><i style="background: var(--food)"></i>Food</span>
+          <span class="p-chip"><i style="background: var(--transport)"></i>Transport</span>
+          <span class="p-chip"><i style="background: var(--airtime)"></i>Airtime</span>
+        </div>
+        <p id="p-spend-title" data-layout-allow-occlusion>Où est parti l'argent</p>
+        <div class="p-row">
+          <b data-layout-allow-occlusion data-layout-allow-overlap>Food</b>
+          <span class="track"><i class="p-bar" style="width: 72%; background: var(--food)"></i></span>
+          <span class="amt" data-layout-allow-safe-zone data-layout-allow-occlusion data-layout-allow-overlap>6 200</span>
+        </div>
+        <div class="p-row">
+          <b data-layout-allow-occlusion data-layout-allow-overlap>Transport</b>
+          <span class="track"><i class="p-bar" style="width: 44%; background: var(--transport)"></i></span>
+          <span class="amt" data-layout-allow-safe-zone data-layout-allow-occlusion data-layout-allow-overlap>2 400</span>
+        </div>
+        <div class="p-row">
+          <b data-layout-allow-occlusion data-layout-allow-overlap>Airtime</b>
+          <span class="track"><i class="p-bar" style="width: 28%; background: var(--airtime)"></i></span>
+          <span class="amt" data-layout-allow-safe-zone data-layout-allow-occlusion data-layout-allow-overlap>1 500</span>
+        </div>
+        <div id="fab">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+        </div>
+        <div id="ripple"></div>
+      </div>
+
+      <!-- 4. Three taps -->
+      <section id="s4" class="clip scene" data-start="10.8" data-duration="5.6">
+        <div id="s4-scrim"></div>
+        <div id="sheet" data-layout-allow-overflow>
+          <div id="sheet-handle"></div>
+          <p id="sheet-title" data-layout-allow-safe-zone>Point du soir</p>
+          <div id="sheet-quick">
+            <span data-layout-allow-safe-zone>Rien dépensé</span>
+            <span data-layout-allow-safe-zone>Comme hier</span>
+          </div>
+          <p id="sheet-cat-label" data-layout-allow-safe-zone>Catégorie</p>
+          <div id="sheet-cats">
+            <div class="sheet-cat" id="cat-food" data-layout-allow-safe-zone>Food</div>
+            <div class="sheet-cat" data-layout-allow-safe-zone>Transport</div>
+            <div class="sheet-cat" data-layout-allow-safe-zone>Airtime</div>
+            <div class="sheet-cat" data-layout-allow-safe-zone>Clothes</div>
+            <div class="sheet-cat" data-layout-allow-safe-zone>Social</div>
+            <div class="sheet-cat" data-layout-allow-safe-zone>Other</div>
+          </div>
+          <p id="sheet-amount-label" data-layout-allow-safe-zone>Montant</p>
+          <div id="sheet-amount">
+            <span id="sheet-amount-text" data-layout-allow-safe-zone></span>
+            <span id="sheet-caret"></span>
+          </div>
+          <p id="sheet-pay-label" data-layout-allow-safe-zone>Type de paiement</p>
+          <div id="sheet-pays">
+            <div class="sheet-pay" data-layout-allow-safe-zone>Espèces</div>
+            <div class="sheet-pay" id="pay-transfer" data-layout-allow-safe-zone>Transfert</div>
+            <div class="sheet-pay" data-layout-allow-safe-zone>Mobile Money</div>
+          </div>
+          <div id="sheet-save" data-layout-allow-safe-zone>Enregistrer 2 500 · Food</div>
+        </div>
+        <p id="s4-caption" class="center" data-layout-allow-safe-zone>Trois taps. C'est noté.</p>
+      </section>
+
+      <!-- 5. Before you spend -->
+      <section id="s5" class="clip scene" data-start="16.4" data-duration="3.2">
+        <p id="s5-label" class="center label">Avant de dépenser</p>
+        <p id="s5-title" class="center">Puis-je me le permettre ?</p>
+        <p id="s5-sub" class="center">Ajoute le coût de ce que tu veux faire.</p>
+        <div id="s5-cost" class="card">
+          <div>
+            <p class="name">Cinéma</p>
+            <p class="hint">Coût total</p>
+          </div>
+          <p class="val">3 000 F</p>
+        </div>
+        <div id="s5-verdict">
+          <div id="s5-check">
+            <svg viewBox="0 0 24 24"><path id="s5-check-path" d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          </div>
+          <div class="vtext">
+            <p class="vtitle">Ça rentre dans ton budget</p>
+            <p class="vbody">Tu restes tranquille, c'est confortable.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Outro -->
+      <section id="s6" class="clip scene" data-start="19.6" data-duration="3">
+        <img id="s6-icon" src="assets/brand/icon.png" alt="" />
+        <p id="s6-word" class="center">Spendly</p>
+        <p id="s6-tag" class="center">Ton argent,<br>sans stress.</p>
+        <p id="s6-product" class="center">Trois taps le soir.</p>
+        <p id="s6-foot" class="center">FR · EN · Android · iOS<br>spendly.miguelyango.com</p>
+      </section>
+
+      <audio
+        id="music"
+        data-start="0"
+        data-duration="22.6"
+        data-volume="0.62"
+        data-fade-in="0.25"
+        data-fade-out="1.4"
+        data-track-index="10"
+        src="assets/music/happy-beats-business-moves-vol-10-by-ende-dot-app.mp3"
+      ></audio>
+      <audio id="sfx-tap1" data-start="10.95" data-duration="0.01" data-volume="0.28" data-track-index="11" src="assets/sfx/click_003.ogg"></audio>
+      <audio id="sfx-tap2" data-start="12" data-duration="0.01" data-volume="0.24" data-track-index="12" src="assets/sfx/click_002.ogg"></audio>
+      <audio id="sfx-tap3" data-start="13.15" data-duration="0.01" data-volume="0.24" data-track-index="13" src="assets/sfx/click_005.ogg"></audio>
+      <audio id="sfx-save" data-start="14.35" data-duration="0.06" data-volume="0.34" data-track-index="14" src="assets/sfx/click2.ogg"></audio>
+      <audio id="sfx-verdict" data-start="17.5" data-duration="0.65" data-volume="0.32" data-track-index="15" src="assets/sfx/impactBell_heavy_003.ogg"></audio>
+      <audio id="sfx-logo" data-start="19.6" data-duration="1.00" data-volume="0.38" data-track-index="16" src="assets/sfx/impactBell_heavy_000.ogg"></audio>
+    </div>
+
+    <script>
+      const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      const tl = gsap.timeline({ paused: true });
+
+      function countTo(selector, from, to, start, duration, ease) {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        const box = { v: from };
+        tl.to(
+          box,
+          {
+            v: to,
+            duration,
+            ease: ease || "power2.out",
+            onUpdate: () => {
+              el.textContent = fmt(box.v);
+            },
+          },
+          start,
+        );
+      }
+
+      /* 1 — the arithmetic. The whole hook is sharp on screen at frame 0 so the
+         social thumbnail already reads: the number, the deadline, the question. */
+      tl.fromTo("#s1-num", { scale: 1.02 }, { scale: 1, duration: 0.6, ease: "expo.out" }, 0);
+      tl.fromTo("#s1-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power2.out" }, 0.3);
+      tl.fromTo("#s1-q2", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.85);
+
+      /* 2 — the answer */
+      tl.fromTo("#s2-icon", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 3.02);
+      tl.fromTo(
+        "#s2-num",
+        { opacity: 0, scale: 0.92, filter: "blur(8px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out" },
+        3.06,
+      );
+      countTo("#s2-number", 0, 3100, 3.1, 0.62);
+      tl.fromTo("#s2-unit", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 3.32);
+      tl.fromTo("#s2-card", { opacity: 0, y: 40, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" }, 3.1);
+
+      /* 3 — the Today screen */
+      tl.fromTo(
+        "#phone",
+        { opacity: 0, y: 96, scale: 0.97 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.62, ease: "expo.out" },
+        6.15,
+      );
+      tl.fromTo("#p-meta", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 6.45);
+      tl.fromTo("#p-greet", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 6.55);
+      tl.fromTo("#p-greet-sub", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 6.7);
+      tl.fromTo("#p-label", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 6.82);
+      tl.fromTo("#p-num", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 6.92);
+      tl.fromTo("#p-allow", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 7.1);
+      tl.fromTo("#p-div", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power2.out" }, 7.2);
+      tl.fromTo("#p-streak", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 7.3);
+      tl.fromTo(
+        ".p-chip",
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.32, stagger: 0.1, ease: "power3.out" },
+        7.45,
+      );
+      tl.fromTo("#p-spend-title", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 7.75);
+      tl.fromTo(".p-bar", { scaleX: 0 }, { scaleX: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }, 7.82);
+      tl.fromTo(".p-row", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.1 }, 7.82);
+      tl.fromTo("#fab", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 7.55);
+
+      /* 4 — three taps */
+      tl.fromTo("#ripple", { scale: 0.7, opacity: 0.55 }, { scale: 3, opacity: 0, duration: 0.55, ease: "power2.out" }, 10.95);
+      tl.to("#fab", { scale: 0.92, duration: 0.1, ease: "power2.out" }, 10.95);
+      tl.to("#fab", { scale: 1, duration: 0.24, ease: "back.out(2.4)" }, 11.05);
+      tl.fromTo("#s4-scrim", { opacity: 0 }, { opacity: 0.32, duration: 0.35 }, 11.15);
+      tl.fromTo("#sheet", { y: 900 }, { y: 0, duration: 0.52, ease: "power3.out" }, 11.2);
+      tl.fromTo("#sheet-title", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3 }, 11.4);
+      tl.fromTo("#sheet-quick", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 11.5);
+      tl.fromTo("#sheet-cat-label", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 11.62);
+      tl.fromTo(
+        ".sheet-cat",
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.26, stagger: 0.045, ease: "power2.out" },
+        11.68,
+      );
+      tl.to("#cat-food", { borderColor: "#2F6BF0", backgroundColor: "#E6EEFF", color: "#2456CB", duration: 0.16 }, 12.0);
+      tl.fromTo("#sheet-amount-label", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 12.2);
+      tl.fromTo("#sheet-amount", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.28 }, 12.25);
+      tl.to(
+        { v: 0 },
+        {
+          v: 1,
+          duration: 0.6,
+          ease: "none",
+          onUpdate: function () {
+            const text = "2 500";
+            const shown = Math.round(this.targets()[0].v * text.length);
+            document.querySelector("#sheet-amount-text").textContent = text.slice(0, shown);
+          },
+        },
+        12.3,
+      );
+      tl.fromTo("#sheet-pay-label", { opacity: 0 }, { opacity: 1, duration: 0.24 }, 12.95);
+      tl.fromTo("#sheet-pays", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.28 }, 13.0);
+      tl.to("#pay-transfer", { borderColor: "#2F6BF0", backgroundColor: "#E6EEFF", color: "#2456CB", duration: 0.16 }, 13.15);
+      tl.fromTo("#sheet-save", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power3.out" }, 13.2);
+      tl.to("#sheet-save", { scale: 0.97, duration: 0.1, ease: "power2.out" }, 14.35);
+      tl.to("#sheet-save", { scale: 1, duration: 0.18, ease: "back.out(3)" }, 14.45);
+      tl.to("#sheet", { y: 900, duration: 0.42, ease: "power3.in" }, 14.5);
+      tl.to("#s4-scrim", { opacity: 0, duration: 0.3 }, 14.55);
+      countTo("#p-number", 28000, 25500, 14.6, 0.48, "power2.inOut");
+      tl.call(
+        () => {
+          document.querySelector("#p-allow").textContent = "Tu peux dépenser environ 2 800 XAF aujourd'hui";
+        },
+        null,
+        14.85,
+      );
+      tl.fromTo("#s4-caption", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 14.8);
+
+      /* 5 — before you spend */
+      tl.fromTo("#s5-label", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.34 }, 16.46);
+      tl.fromTo(
+        "#s5-title",
+        { opacity: 0, y: 20, filter: "blur(7px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.48, ease: "power3.out" },
+        16.52,
+      );
+      tl.fromTo("#s5-sub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.36 }, 16.72);
+      tl.fromTo("#s5-cost", { opacity: 0, y: 30, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "power3.out" }, 16.95);
+      tl.fromTo(
+        "#s5-verdict",
+        { opacity: 0, y: 26, scale: 0.96 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.5)" },
+        17.5,
+      );
+      tl.fromTo(
+        "#s5-check",
+        { scale: 0.5, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2.2)" },
+        17.64,
+      );
+
+      /* 6 — outro */
+      tl.fromTo("#s6-icon", { opacity: 0, scale: 0.82, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "expo.out" }, 19.62);
+      tl.fromTo(
+        "#s6-word",
+        { opacity: 0, y: 22, filter: "blur(8px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.46, ease: "power3.out" },
+        19.7,
+      );
+      tl.fromTo("#s6-foot", { opacity: 0 }, { opacity: 1, duration: 0.38 }, 19.95);
+      tl.fromTo("#s6-tag", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 20.0);
+      tl.fromTo("#s6-product", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, 20.4);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
