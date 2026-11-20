@@ -13,14 +13,14 @@ It runs on a Vite + React front end with a Hono API on Cloudflare Workers and a 
 
 ## Features
 
-- Onboarding questionnaire: income, fixed costs, payday range, savings goal, wishlist item, nightly reminder
-- **Today** home: left to spend, daily allowance, category breakdown, planned spending actions, streak
+- Onboarding: income type, starting balance, next income window, optional big payments, summary
+- **Today** home: available to spend until the period end, daily allowance, category breakdown, salary prompt, income and balance actions
 - **Goals & Wishes**: savings goals with contributions, wishlist with a waiting period before buying
 - **Stats**: monthly overview, category mix, weekend effect, exports
 - **Plan**: income, savings target and wishlist envelope per month
 - **Activity**, **Calendar**, **Debt tracker**, **Affordability simulator**
 - **Settings**: profile, theme, language, privacy, reminders, data export and account deletion
-- **Admin** (`/admin`): local feature flags behind a device PIN
+- **Income**: salary and variable sources, received/expected income events, fixed costs, balance adjustments
 
 ## Local development
 
@@ -59,8 +59,11 @@ npx wrangler deploy
 ## Conventions
 
 - Money is stored as whole XAF integers; dates are `YYYY-MM-DD` in `Africa/Douala`.
-- Budget cycles start on the saved payday (first day of the payday window) and end the day
-  before the next one; plan records are keyed by the month the cycle starts in.
+- A budget period starts on the day onboarding finishes (or the day the salary is confirmed) and
+  ends the day before the next payday. Without a fixed salary it is a rolling 7/14/30-day horizon.
+- Money: `current balance = starting balance + income received − spending + adjustments`;
+  `free = balance − committed`; allowance = `floor(free / days left / 100) * 100`.
+- All money logic lives in `src/lib/money.ts` and `src/lib/selectors.ts`, covered by Vitest.
 - UI copy lives in `src/lib/i18n/fr.ts` (source dictionary) and `src/lib/i18n/en.ts` (typed mirror),
   so a missing key fails the typecheck.
-- Feature flags live in `src/lib/features.ts`; all features ship enabled and `/admin` can hide them.
+- Icons are generated from `docs/assets/icon.png` with `python scripts/icons.py`.

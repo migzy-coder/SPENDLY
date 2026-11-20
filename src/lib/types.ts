@@ -10,6 +10,12 @@ export type PlannedStatus = "planned" | "done" | "skipped";
 export type WishPriority = "Need" | "Want" | "Treat";
 export type WishStatus = "active" | "waiting" | "bought" | "removed";
 
+/** How a person earns: a salary, variable income, or both. */
+export type IncomeMode = "salary" | "variable" | "both";
+export type IncomeSourceType = "salary" | "business" | "freelance" | "side" | "gift" | "other";
+export type IncomeFrequency = "monthly" | "weekly";
+export type FixedCostFrequency = "weekly" | "monthly" | "one_off";
+
 export type User = {
   id: string;
   name: string;
@@ -20,6 +26,60 @@ export type User = {
   locale: Locale;
   theme: Theme;
   onboarded: number;
+  income_mode: IncomeMode;
+  /** Used when there is no fixed income: 7, 14 or 30 days. */
+  rolling_horizon_days: number;
+  fixed_cost_dismissed: number;
+  created_at: string;
+};
+
+/** A salary or a variable source (business, freelance, side job, gift…). */
+export type IncomeSource = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: IncomeSourceType;
+  frequency: IncomeFrequency | null;
+  payday_day: number | null;
+  typical_amount: number;
+  is_primary: number;
+  created_at: string;
+};
+
+/** Money that actually arrived (received) or is planned (expected, never counted). */
+export type IncomeEvent = {
+  id: string;
+  user_id: string;
+  source_id: string;
+  amount: number;
+  date: string;
+  note: string;
+  status: "received" | "expected";
+  created_at: string;
+};
+
+/** One budget period. `end_date` is inclusive. */
+export type Period = {
+  id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  starting_balance: number;
+  horizon_days: number;
+  closed_at: string | null;
+  salary_confirmed_at: string | null;
+  balance_confirmed_at: string | null;
+  created_at: string;
+};
+
+/** Never rewrites the period's starting balance — only adds a signed correction. */
+export type BalanceAdjustment = {
+  id: string;
+  user_id: string;
+  period_id: string;
+  amount: number;
+  note: string;
+  date: string;
   created_at: string;
 };
 
@@ -39,6 +99,12 @@ export type FixedCost = {
   name: string;
   amount: number;
   recurring: number;
+  category: Category;
+  frequency: FixedCostFrequency;
+  /** Day of month for monthly costs (1–31, clamped in short months). */
+  due_day: number | null;
+  /** Exact date for one-off costs, or the first occurrence for weekly costs. */
+  due_date: string | null;
   created_at: string;
 };
 
@@ -149,20 +215,10 @@ export type Bootstrap = {
   debts: Debt[];
   payments: DebtPayment[];
   reminders: Reminder[];
-};
-
-export type SetupPayload = {
-  name: string;
-  paydayDay: number;
-  paydayDayEnd?: number;
-  nightlyTime: string;
-  locale: Locale;
-  income: number;
-  savingsTarget: number;
-  wishlistBudget: number;
-  month: string;
-  fixedCosts: { name: string; amount: number }[];
-  goal: { name: string; target: number; dueDate: string | null } | null;
+  periods: Period[];
+  incomeSources: IncomeSource[];
+  incomeEvents: IncomeEvent[];
+  adjustments: BalanceAdjustment[];
 };
 
 export type PlanPayload = {
@@ -170,15 +226,6 @@ export type PlanPayload = {
   income: number;
   savingsTarget: number;
   wishlistBudget: number;
-};
-
-export type ProfilePayload = {
-  name: string;
-  paydayDay: number;
-  paydayDayEnd?: number;
-  nightlyTime: string;
-  locale: Locale;
-  theme: Theme;
 };
 
 export type EntryPayload = {
@@ -225,4 +272,76 @@ export type ReminderItem = {
   key: Reminder["key"];
   enabled: boolean;
   timeChoice: string;
+};
+
+/* Period-based money model ------------------------------------------------- */
+
+export type SetupPayload = {
+  name: string;
+  paydayDay: number;
+  paydayDayEnd?: number;
+  nightlyTime: string;
+  locale: Locale;
+  incomeMode: IncomeMode;
+  balance: number;
+  nextIncomeDate: string | null;
+  horizonDays: number;
+  bigPayments: { name: string; amount: number; date: string }[];
+  fixedCosts: {
+    name: string;
+    amount: number;
+    category: Category;
+    frequency: FixedCostFrequency;
+    dueDay: number | null;
+    dueDate: string | null;
+  }[];
+  goal: { name: string; target: number; dueDate: string | null } | null;
+};
+
+export type ProfilePayload = {
+  name: string;
+  paydayDay: number;
+  paydayDayEnd?: number;
+  nightlyTime: string;
+  locale: Locale;
+  theme: Theme;
+  incomeMode: IncomeMode;
+  horizonDays: number;
+};
+
+export type IncomeSourcePayload = {
+  name: string;
+  type: IncomeSourceType;
+  frequency: IncomeFrequency | null;
+  paydayDay: number | null;
+  typicalAmount: number;
+};
+
+export type IncomeEventPayload = {
+  sourceId: string;
+  amount: number;
+  date: string;
+  note: string;
+  status: "received" | "expected";
+};
+
+export type BalanceAdjustmentPayload = {
+  amount: number;
+  note: string;
+  date: string;
+};
+
+export type FixedCostPayload = {
+  name: string;
+  amount: number;
+  category: Category;
+  frequency: FixedCostFrequency;
+  dueDay: number | null;
+  dueDate: string | null;
+};
+
+export type SalaryPayload = {
+  sourceId: string;
+  amount: number;
+  date: string;
 };

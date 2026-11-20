@@ -7,21 +7,14 @@ import { TabBar } from "./TabBar";
 import { useBootstrap } from "../lib/store";
 import { useI18n } from "../lib/i18n";
 import { applyTheme, readTheme } from "../lib/theme";
-import { useFeatures } from "../lib/features";
 
 export function RootLayout() {
   const location = useLocation();
   const [addOpen, setAddOpen] = useState(false);
   const { data } = useBootstrap();
   const { locale, setLocale } = useI18n();
-  const features = useFeatures();
 
-  const tabRoutes = [
-    ...(features.quickLog ? ["/today"] : []),
-    ...(features.wishlist ? ["/goals"] : []),
-    ...(features.stats ? ["/stats"] : []),
-    ...(features.plan ? ["/plan"] : []),
-  ];
+  const tabRoutes = ["/today", "/goals", "/stats", "/plan"];
   const showTabs = tabRoutes.includes(location.pathname);
   const appliedLocale = useRef<{ userId: string; locale: string } | null>(null);
 

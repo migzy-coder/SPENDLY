@@ -244,6 +244,77 @@ export function streakEnding(dateISO: string, loggedDates: Set<string>): number 
   return count;
 }
 
+/* Period-based budget model ------------------------------------------------ */
+
+export const PERIOD_HORIZONS = [7, 14, 30] as const;
+export const DEFAULT_HORIZON = 30;
+
+export function periodEndFor(startISO: string, paydayDay?: number, horizonDays = 0): string {
+  if (horizonDays > 0) return addDays(startISO, horizonDays - 1);
+  return cycleEnd(startISO, paydayDay ?? DEFAULT_PAYDAY);
+}
+
+/** Days left in a period, today included. Zero when the period has ended. */
+export function periodDaysRemaining(todayISO: string, endISO: string): number {
+  return Math.max(0, daysBetween(todayISO, endISO) + 1);
+}
+
+/** Money missing when free is negative. Zero when the budget is healthy. */
+export function shortfall(free: number): number {
+  return Math.max(0, -whole(free));
+}
+
+export type FixedCostLike = {
+  amount: number;
+  frequency: "weekly" | "monthly" | "one_off";
+  due_day: number | null;
+  due_date: string | null;
+};
+
+/** Dates on which a fixed cost is committed inside [from, to]. */
+export function fixedCostOccurrences(cost: FixedCostLike, from: string, to: string): string[] {
+  const amount = whole(cost.amount);
+  if (amount <= 0) return [];
+  if (cost.frequency === "one_off") {
+    return cost.due_date && cost.due_date >= from && cost.due_date <= to ? [cost.due_date] : [];
+  }
+  if (cost.frequency === "weekly") {
+    const first = cost.due_date ?? from;
+    if (first > to) return [];
+    const dates: string[] = [];
+    for (let cursor = first; cursor <= to; cursor = addDays(cursor, 7)) {
+      if (cursor >= from) dates.push(cursor);
+    }
+    return dates;
+  }
+  const day = Math.min(Math.max(1, Math.trunc(cost.due_day ?? 1)), 31);
+  const dates: string[] = [];
+  let cursor = `${from.slice(0, 7)}-01`;
+  // A cost due before the period starts can still fall due later in the period.
+  if (Number(from.slice(8, 10)) > day) cursor = addMonths(cursor, 1);
+  while (cursor <= to) {
+    const due = `${cursor.slice(0, 7)}-${pad2(Math.min(day, daysInMonth(cursor)))}`;
+    if (due >= from && due <= to) dates.push(due);
+    cursor = addMonths(`${cursor.slice(0, 7)}-01`, 1);
+  }
+  return dates;
+}
+
+export function fixedCostsDueInPeriod(costs: FixedCostLike[], from: string, to: string): number {
+  return whole(
+    costs.reduce((total, cost) => total + whole(cost.amount) * fixedCostOccurrences(cost, from, to).length, 0),
+  );
+}
+
+/** True when today is inside the saved payday window (e.g. 24–28). */
+export function inPaydayWindow(dateISO: string, startDay: number, endDay: number): boolean {
+  const day = Number(dateISO.slice(8, 10));
+  const start = clampPayday(startDay);
+  const end = clampPayday(endDay);
+  if (start <= end) return day >= start && day <= end;
+  return day >= start || day <= end;
+}
+
 export const SIMULATOR_PRESETS: Record<string, { labelKey: string; lines: { name: string; amount: number }[] }> = {
   cinema: { labelKey: "cinema", lines: [{ name: "Ticket", amount: 3000 }, { name: "Snacks", amount: 2000 }, { name: "Transport", amount: 1500 }] },
   restaurant: { labelKey: "restaurant", lines: [{ name: "Meal", amount: 8000 }, { name: "Transport", amount: 1500 }] },

@@ -7,15 +7,21 @@ import {
   dailyAllowance,
   daysRemaining,
   debtSchedule,
+  fixedCostOccurrences,
+  fixedCostsDueInPeriod,
   formatXaf,
   freeAmount,
   goalPace,
+  inPaydayWindow,
   isOverBudget,
   left,
   leftToSpend,
   safeToBuy,
   simulatorVerdict,
   streakEnding,
+  periodDaysRemaining,
+  periodEndFor,
+  shortfall,
   tomorrowAllowance,
   weekendEffect,
   weekStart,
@@ -115,5 +121,35 @@ describe("goals, debts, stats", () => {
     expect(streakEnding("2026-11-12", logged)).toBe(3);
     expect(streakEnding("2026-11-12", new Set(["2026-11-12", "2026-11-10"]))).toBe(1);
     expect(weekendEffect([{ date: "2026-11-12", amount: 100 }])).toBeNull();
+  });
+
+  it("computes period ends for pay cycles and rolling horizons", () => {
+    expect(periodEndFor("2026-11-25", 25, 0)).toBe("2026-12-24");
+    expect(periodEndFor("2026-11-17", 25, 0)).toBe("2026-11-24");
+    expect(periodEndFor("2026-11-17", 25, 14)).toBe("2026-11-30");
+    expect(periodDaysRemaining("2026-11-17", "2026-11-24")).toBe(8);
+    expect(periodDaysRemaining("2026-11-25", "2026-11-24")).toBe(0);
+    expect(shortfall(-5_000)).toBe(5_000);
+    expect(shortfall(2_000)).toBe(0);
+  });
+
+  it("recognises the payday window for the salary prompt", () => {
+    expect(inPaydayWindow("2026-11-24", 24, 28)).toBe(true);
+    expect(inPaydayWindow("2026-11-28", 24, 28)).toBe(true);
+    expect(inPaydayWindow("2026-11-29", 24, 28)).toBe(false);
+  });
+
+  it("generates one-off, weekly and monthly fixed costs in a period", () => {
+    const base = { amount: 1_000 };
+    expect(fixedCostOccurrences({ ...base, frequency: "one_off", due_date: "2026-11-10", due_day: null }, "2026-11-01", "2026-11-30"))
+      .toEqual(["2026-11-10"]);
+    expect(fixedCostOccurrences({ ...base, frequency: "weekly", due_date: "2026-11-02", due_day: null }, "2026-11-01", "2026-11-30"))
+      .toHaveLength(5);
+    expect(fixedCostOccurrences({ ...base, frequency: "monthly", due_date: null, due_day: 31 }, "2026-11-01", "2026-12-31"))
+      .toEqual(["2026-11-30", "2026-12-31"]);
+    expect(fixedCostsDueInPeriod([
+      { ...base, frequency: "monthly", due_date: null, due_day: 20 },
+      { amount: 500, frequency: "one_off", due_date: "2026-12-05", due_day: null },
+    ], "2026-11-01", "2026-11-30")).toBe(1_000);
   });
 });

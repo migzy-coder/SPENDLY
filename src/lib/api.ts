@@ -11,14 +11,19 @@
 
 import * as local from "./localdb";
 import type {
+  BalanceAdjustmentPayload,
   Bootstrap,
   DebtPayload,
   EntryPayload,
+  FixedCostPayload,
   GoalPayload,
+  IncomeEventPayload,
+  IncomeSourcePayload,
   PlanPayload,
   PlannedPayload,
   ProfilePayload,
   ReminderItem,
+  SalaryPayload,
   SetupPayload,
   WishPayload,
 } from "./types";
@@ -58,6 +63,18 @@ export type Api = {
   payDebt(id: string): Promise<void>;
   deleteDebt(id: string): Promise<void>;
   saveReminders(items: ReminderItem[]): Promise<void>;
+  createIncomeSource(payload: IncomeSourcePayload): Promise<{ id: string }>;
+  updateIncomeSource(id: string, payload: IncomeSourcePayload): Promise<void>;
+  deleteIncomeSource(id: string): Promise<void>;
+  createIncomeEvent(payload: IncomeEventPayload): Promise<{ id: string }>;
+  deleteIncomeEvent(id: string): Promise<void>;
+  updateBalance(payload: BalanceAdjustmentPayload): Promise<void>;
+  confirmBalance(periodId: string): Promise<void>;
+  confirmSalary(payload: SalaryPayload): Promise<void>;
+  dismissFixedCostReminder(): Promise<void>;
+  createFixedCost(payload: FixedCostPayload): Promise<{ id: string }>;
+  updateFixedCost(id: string, payload: FixedCostPayload): Promise<void>;
+  deleteFixedCost(id: string): Promise<void>;
   getStats(from: string, to: string): Promise<{ entries: unknown[]; planned: unknown[] }>;
   exportData(format: "json" | "csv"): Promise<string>;
   deleteAccount(): Promise<void>;
@@ -164,6 +181,18 @@ function createRemoteApi(getToken: TokenProvider): Api {
     payDebt: (id) => send<void>(`/api/debts/${id}/pay`, { method: "POST", body: "{}" }),
     deleteDebt: (id) => send<void>(`/api/debts/${id}`, { method: "DELETE" }),
     saveReminders: (items) => send<void>("/api/reminders", { method: "PUT", body: json({ items }) }),
+    createIncomeSource: (payload) => send<{ id: string }>("/api/income-sources", { method: "POST", body: json(payload) }),
+    updateIncomeSource: (id, payload) => send<void>(`/api/income-sources/${id}`, { method: "PATCH", body: json(payload) }),
+    deleteIncomeSource: (id) => send<void>(`/api/income-sources/${id}`, { method: "DELETE" }),
+    createIncomeEvent: (payload) => send<{ id: string }>("/api/income-events", { method: "POST", body: json(payload) }),
+    deleteIncomeEvent: (id) => send<void>(`/api/income-events/${id}`, { method: "DELETE" }),
+    updateBalance: (payload) => send<void>("/api/balance-adjustments", { method: "POST", body: json(payload) }),
+    confirmBalance: (periodId) => send<void>(`/api/periods/${periodId}/confirm-balance`, { method: "POST", body: "{}" }),
+    confirmSalary: (payload) => send<void>("/api/salary-received", { method: "POST", body: json(payload) }),
+    dismissFixedCostReminder: () => send<void>("/api/fixed-costs/dismiss-reminder", { method: "POST", body: "{}" }),
+    createFixedCost: (payload) => send<{ id: string }>("/api/fixed-costs", { method: "POST", body: json(payload) }),
+    updateFixedCost: (id, payload) => send<void>(`/api/fixed-costs/${id}`, { method: "PATCH", body: json(payload) }),
+    deleteFixedCost: (id) => send<void>(`/api/fixed-costs/${id}`, { method: "DELETE" }),
     getStats: (from, to) =>
       send<{ entries: unknown[]; planned: unknown[] }>(
         `/api/stats?from=${from}&to=${to}`,
@@ -210,6 +239,18 @@ function createLocalApi(): Api {
     payDebt: local.localPayDebt,
     deleteDebt: local.localDeleteDebt,
     saveReminders: local.localSaveReminders,
+    createIncomeSource: local.localCreateIncomeSource,
+    updateIncomeSource: local.localUpdateIncomeSource,
+    deleteIncomeSource: local.localDeleteIncomeSource,
+    createIncomeEvent: local.localCreateIncomeEvent,
+    deleteIncomeEvent: local.localDeleteIncomeEvent,
+    updateBalance: local.localUpdateBalance,
+    confirmBalance: local.localConfirmBalance,
+    confirmSalary: local.localConfirmSalary,
+    dismissFixedCostReminder: local.localDismissFixedCostReminder,
+    createFixedCost: local.localCreateFixedCost,
+    updateFixedCost: local.localUpdateFixedCost,
+    deleteFixedCost: local.localDeleteFixedCost,
     getStats: async (from, to) => {
       const state = await local.localBootstrap();
       return {

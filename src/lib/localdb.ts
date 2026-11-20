@@ -10,17 +10,23 @@
 
 import { openDB } from "idb";
 import type { IDBPDatabase } from "idb";
-import { debtSchedule } from "./money";
+import { addDays, debtSchedule, periodEndFor, todayISO } from "./money";
 import type {
+  BalanceAdjustmentPayload,
   Bootstrap,
   DebtPayload,
   Entry,
   EntryPayload,
+  FixedCostPayload,
   GoalPayload,
+  IncomeEventPayload,
+  IncomeSourcePayload,
+  Period,
   PlanPayload,
   PlannedPayload,
   ProfilePayload,
   ReminderItem,
+  SalaryPayload,
   SetupPayload,
   WishPayload,
 } from "./types";
@@ -81,6 +87,10 @@ function emptyState(): Bootstrap {
     debts: [],
     payments: [],
     reminders: [],
+    periods: [],
+    incomeSources: [],
+    incomeEvents: [],
+    adjustments: [],
   };
 }
 
@@ -106,15 +116,58 @@ function ensureUser(state: Bootstrap) {
       locale: "fr",
       theme: "light",
       onboarded: 0,
+      income_mode: "salary",
+      rolling_horizon_days: 30,
+      fixed_cost_dismissed: 0,
       created_at: now(),
     };
   }
   return state.user;
 }
 
+function activeLocalPeriod(state: Bootstrap, today: string): Period | null {
+  const open = state.periods.find((p) => p.start_date <= today && p.end_date >= today && !p.closed_at);
+  if (open) return open;
+  const last = [...state.periods].sort((a, b) => b.start_date.localeCompare(a.start_date))[0];
+  return last ?? null;
+}
+
+function localBalance(state: Bootstrap, period: Period): number {
+  const inPeriod = (date: string) => date >= period.start_date && date <= period.end_date;
+  return Math.trunc(
+    period.starting_balance +
+      state.incomeEvents.filter((e) => e.status === "received" && inPeriod(e.date)).reduce((sum, e) => sum + e.amount, 0) -
+      state.entries.filter((e) => inPeriod(e.date)).reduce((sum, e) => sum + e.amount, 0) +
+      state.adjustments.filter((a) => a.period_id === period.id).reduce((sum, a) => sum + a.amount, 0),
+  );
+}
+
+function newLocalPeriod(start: string, end: string, balance: number, horizon: number, salary = false): Period {
+  const stamp = now();
+  return {
+    id: uid(),
+    user_id: LOCAL_USER_ID,
+    start_date: start,
+    end_date: end,
+    starting_balance: balance,
+    horizon_days: horizon,
+    closed_at: null,
+    salary_confirmed_at: salary ? stamp : null,
+    balance_confirmed_at: salary ? stamp : null,
+    created_at: stamp,
+  };
+}
+
 export async function localBootstrap(): Promise<Bootstrap> {
   const state = await readState();
-  ensureUser(state);
+  const user = ensureUser(state);
+  const today = todayISO();
+  if (user.onboarded === 1 && !activeLocalPeriod(state, today)) {
+    const last = [...state.periods].sort((a, b) => b.start_date.localeCompare(a.start_date))[0];
+    const carry = last ? localBalance(state, last) : 0;
+    const horizon = user.income_mode === "variable" ? user.rolling_horizon_days : 0;
+    state.periods.push(newLocalPeriod(today, periodEndFor(today, user.payday_day, horizon), carry, horizon));
+  }
   await writeState(state);
   return state;
 }
@@ -122,48 +175,49 @@ export async function localBootstrap(): Promise<Bootstrap> {
 export async function localSetup(payload: SetupPayload): Promise<void> {
   const state = await readState();
   const user = ensureUser(state);
+  const today = todayISO();
   user.name = payload.name;
   user.payday_day = payload.paydayDay;
   user.payday_day_end = payload.paydayDayEnd ?? payload.paydayDay;
   user.nightly_time = payload.nightlyTime;
   user.locale = payload.locale;
+  user.income_mode = payload.incomeMode;
+  user.rolling_horizon_days = payload.horizonDays;
   user.onboarded = 1;
-  const plan = state.plans.find((item) => item.month === payload.month);
-  if (plan) {
-    plan.income = payload.income;
-    plan.savings_target = payload.savingsTarget;
-    plan.wishlist_budget = payload.wishlistBudget;
-  } else {
-    state.plans.push({
-      id: uid(),
-      user_id: LOCAL_USER_ID,
-      month: payload.month,
-      income: payload.income,
-      savings_target: payload.savingsTarget,
-      wishlist_budget: payload.wishlistBudget,
-      created_at: now(),
+
+  const end = payload.incomeMode === "variable" && payload.nextIncomeDate
+    ? addDays(payload.nextIncomeDate, -1)
+    : periodEndFor(today, payload.paydayDay, payload.incomeMode === "variable" ? payload.horizonDays : 0);
+  state.periods = [newLocalPeriod(today, end, payload.balance, payload.horizonDays)];
+  state.periods[0].balance_confirmed_at = now();
+
+  state.incomeSources = [];
+  if (payload.incomeMode === "salary" || payload.incomeMode === "both") {
+    state.incomeSources.push({
+      id: uid(), user_id: LOCAL_USER_ID, name: payload.locale === "fr" ? "Salaire" : "Salary",
+      type: "salary", frequency: "monthly", payday_day: payload.paydayDay, typical_amount: 0, is_primary: 1, created_at: now(),
     });
   }
-  // Re-running setup replaces the fixed costs instead of piling them up.
-  state.fixedCosts = [];
-  for (const cost of payload.fixedCosts) {
-    state.fixedCosts.push({
-      id: uid(),
-      user_id: LOCAL_USER_ID,
-      name: cost.name,
-      amount: cost.amount,
-      recurring: 1,
-      created_at: now(),
+  if (payload.incomeMode === "variable" || payload.incomeMode === "both") {
+    state.incomeSources.push({
+      id: uid(), user_id: LOCAL_USER_ID, name: payload.locale === "fr" ? "Revenu variable" : "Side income",
+      type: "side", frequency: null, payday_day: null, typical_amount: 0, is_primary: 0, created_at: now(),
+    });
+  }
+  state.fixedCosts = payload.fixedCosts.map((cost) => ({
+    id: uid(), user_id: LOCAL_USER_ID, name: cost.name, amount: cost.amount, recurring: 1,
+    category: cost.category, frequency: cost.frequency, due_day: cost.dueDay, due_date: cost.dueDate, created_at: now(),
+  }));
+  for (const item of payload.bigPayments) {
+    state.planned.push({
+      id: uid(), user_id: LOCAL_USER_ID, name: item.name, date: item.date, category: "Other",
+      amount: item.amount, status: "planned", created_at: now(),
     });
   }
   if (payload.goal) {
     state.goals.push({
-      id: uid(),
-      user_id: LOCAL_USER_ID,
-      name: payload.goal.name,
-      target: payload.goal.target,
-      due_date: payload.goal.dueDate,
-      created_at: now(),
+      id: uid(), user_id: LOCAL_USER_ID, name: payload.goal.name, target: payload.goal.target,
+      due_date: payload.goal.dueDate, created_at: now(),
     });
   }
   await writeState(state);
@@ -199,6 +253,146 @@ export async function localSaveProfile(payload: ProfilePayload): Promise<void> {
   user.nightly_time = payload.nightlyTime;
   user.locale = payload.locale;
   user.theme = payload.theme;
+  user.income_mode = payload.incomeMode ?? user.income_mode;
+  user.rolling_horizon_days = payload.horizonDays ?? user.rolling_horizon_days;
+  await writeState(state);
+}
+
+export async function localCreateIncomeSource(payload: IncomeSourcePayload): Promise<{ id: string }> {
+  const state = await readState();
+  const id = uid();
+  state.incomeSources.push({
+    id, user_id: LOCAL_USER_ID, name: payload.name, type: payload.type,
+    frequency: payload.frequency, payday_day: payload.paydayDay,
+    typical_amount: payload.typicalAmount, is_primary: 0, created_at: now(),
+  });
+  await writeState(state);
+  return { id };
+}
+
+export async function localUpdateIncomeSource(id: string, payload: IncomeSourcePayload): Promise<void> {
+  const state = await readState();
+  const source = state.incomeSources.find((item) => item.id === id);
+  if (source) {
+    source.name = payload.name;
+    source.type = payload.type;
+    source.frequency = payload.frequency;
+    source.payday_day = payload.paydayDay;
+    source.typical_amount = payload.typicalAmount;
+  }
+  await writeState(state);
+}
+
+export async function localDeleteIncomeSource(id: string): Promise<void> {
+  const state = await readState();
+  state.incomeSources = state.incomeSources.filter((item) => item.id !== id || item.is_primary === 1);
+  await writeState(state);
+}
+
+export async function localCreateIncomeEvent(payload: IncomeEventPayload): Promise<{ id: string }> {
+  const state = await readState();
+  const id = uid();
+  state.incomeEvents.push({
+    id, user_id: LOCAL_USER_ID, source_id: payload.sourceId, amount: payload.amount,
+    date: payload.date, note: payload.note, status: payload.status, created_at: now(),
+  });
+  await writeState(state);
+  return { id };
+}
+
+export async function localDeleteIncomeEvent(id: string): Promise<void> {
+  const state = await readState();
+  state.incomeEvents = state.incomeEvents.filter((item) => item.id !== id);
+  await writeState(state);
+}
+
+export async function localUpdateBalance(payload: BalanceAdjustmentPayload): Promise<void> {
+  const state = await readState();
+  const today = todayISO();
+  const period = activeLocalPeriod(state, today);
+  if (period) {
+    state.adjustments.push({
+      id: uid(), user_id: LOCAL_USER_ID, period_id: period.id, amount: payload.amount,
+      note: payload.note, date: payload.date, created_at: now(),
+    });
+  }
+  await writeState(state);
+}
+
+export async function localConfirmBalance(periodId: string): Promise<void> {
+  const state = await readState();
+  const period = state.periods.find((item) => item.id === periodId);
+  if (period) period.balance_confirmed_at = now();
+  await writeState(state);
+}
+
+export async function localConfirmSalary(payload: SalaryPayload): Promise<void> {
+  const state = await readState();
+  const today = todayISO();
+  const user = ensureUser(state);
+  const active = activeLocalPeriod(state, today);
+  if (!active) return;
+  const horizon = user.income_mode === "variable" ? user.rolling_horizon_days : 0;
+  if (active.start_date === payload.date) {
+    state.incomeEvents.push({
+      id: uid(), user_id: LOCAL_USER_ID, source_id: payload.sourceId, amount: payload.amount,
+      date: payload.date, note: "", status: "received", created_at: now(),
+    });
+    active.salary_confirmed_at = now();
+    active.balance_confirmed_at = now();
+  } else {
+    const carry = localBalance(state, active);
+    active.closed_at = now();
+    active.salary_confirmed_at = now();
+    const next = newLocalPeriod(
+      payload.date, periodEndFor(payload.date, user.payday_day, horizon), carry, horizon, true,
+    );
+    state.periods.push(next);
+    state.incomeEvents.push({
+      id: uid(), user_id: LOCAL_USER_ID, source_id: payload.sourceId, amount: payload.amount,
+      date: payload.date, note: "", status: "received", created_at: now(),
+    });
+  }
+  const source = state.incomeSources.find((item) => item.id === payload.sourceId);
+  if (source) source.typical_amount = payload.amount;
+  await writeState(state);
+}
+
+export async function localDismissFixedCostReminder(): Promise<void> {
+  const state = await readState();
+  ensureUser(state).fixed_cost_dismissed = 1;
+  await writeState(state);
+}
+
+export async function localCreateFixedCost(payload: FixedCostPayload): Promise<{ id: string }> {
+  const state = await readState();
+  const id = uid();
+  state.fixedCosts.push({
+    id, user_id: LOCAL_USER_ID, name: payload.name, amount: payload.amount, recurring: 1,
+    category: payload.category, frequency: payload.frequency, due_day: payload.dueDay,
+    due_date: payload.dueDate, created_at: now(),
+  });
+  await writeState(state);
+  return { id };
+}
+
+export async function localUpdateFixedCost(id: string, payload: FixedCostPayload): Promise<void> {
+  const state = await readState();
+  const cost = state.fixedCosts.find((item) => item.id === id);
+  if (cost) {
+    cost.name = payload.name;
+    cost.amount = payload.amount;
+    cost.category = payload.category;
+    cost.frequency = payload.frequency;
+    cost.due_day = payload.dueDay;
+    cost.due_date = payload.dueDate;
+  }
+  await writeState(state);
+}
+
+export async function localDeleteFixedCost(id: string): Promise<void> {
+  const state = await readState();
+  state.fixedCosts = state.fixedCosts.filter((item) => item.id !== id);
   await writeState(state);
 }
 

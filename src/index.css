@@ -221,6 +221,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Clerk's development-mode badge must never be visible to normal users, even
+   while the deployed Worker still uses a test publishable key. */
+.cl-devBadge,
+.cl-devBadgeContainer,
+#clerk-dev-badge {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

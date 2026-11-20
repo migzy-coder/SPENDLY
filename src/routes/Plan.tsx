@@ -10,7 +10,6 @@ import { formatXaf } from "../lib/money";
 import { buildMonthState, planForCycle } from "../lib/selectors";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
 import { useToast } from "../components/Toast";
-import { useFeatures } from "../lib/features";
 
 export function Plan() {
   const { data } = useBootstrap();
@@ -19,7 +18,6 @@ export function Plan() {
   const navigate = useNavigate();
   const refresh = useRefresh();
   const { show } = useToast();
-  const features = useFeatures();
   const [editing, setEditing] = useState(false);
 
   const state = useMemo(() => (data ? buildMonthState(data, today) : null), [data, today]);
@@ -43,18 +41,21 @@ export function Plan() {
   }
 
   const rows: { label: string; value: number; negative?: boolean }[] = [
-    { label: t("plan.income"), value: state.income },
-    { label: t("plan.fixedCosts"), value: state.fixedCosts, negative: true },
-    { label: t("plan.savings"), value: state.savings, negative: true },
+    { label: t("balance.current"), value: state.currentBalance },
+    { label: t("income.received"), value: state.incomeReceived },
+    { label: t("fixed.title"), value: state.fixedCosts, negative: true },
     { label: t("plan.debtPayments"), value: state.debtPayments, negative: true },
-    { label: t("plan.wishlist"), value: state.wishlist, negative: true },
+    { label: t("plan.savings"), value: state.savings, negative: true },
+    { label: t("plan.plannedSpending"), value: state.plannedRemaining, negative: true },
   ];
 
   return (
     <div className="pb-6">
       <header className="pt-safe px-5 pt-12">
         <div className="flex items-center justify-between">
-          <p className="text-[12px] font-semibold tracking-[0.14em] text-muted">{t("plan.leftThisMonth")}</p>
+          <p className="text-[12px] font-semibold tracking-[0.04em] text-muted">
+            {t("period.availableUntil", { date: formatDate(state.periodEnd, { day: "numeric", month: "short" }) })}
+          </p>
           <button
             type="button"
             onClick={() => setEditing(true)}
@@ -64,7 +65,7 @@ export function Plan() {
           </button>
         </div>
         <p className="mt-1 text-[52px] leading-none font-bold tracking-[-0.03em]">
-          <CountUp value={state.left} />
+          <CountUp value={state.free} />
           <span className="ml-1.5 text-[16px] font-semibold text-muted">XAF</span>
         </p>
         <p className="mt-2 text-[13px] text-muted">
@@ -97,6 +98,20 @@ export function Plan() {
           ))}
         </Card>
 
+        <Link
+          to="/plan/fixed-costs"
+          className="flex items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card active:scale-[0.99]"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-[13px] bg-accent-tint text-accent">
+            <Icon name="receipt" size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-bold">{t("fixed.title")}</span>
+            <span className="block text-[13px] text-muted">{formatXaf(state.fixedCosts)} XAF · {t("period.daysLeft", { count: state.daysRemaining })}</span>
+          </span>
+          <Icon name="chevronRight" size={20} className="text-muted" />
+        </Link>
+
         <Card tint className="flex items-center justify-between px-4 py-3">
           <div className="min-w-0">
             <p className="text-[16px] font-bold">{t("plan.dailyAllowance")}</p>
@@ -112,23 +127,20 @@ export function Plan() {
           </span>
         </Card>
 
-        {features.simulator ? (
-          <button
-            type="button"
-            onClick={() => navigate("/simulator")}
-            className="flex w-full items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card active:scale-[0.99]"
-          >
-            <Mascot pose="details" size={72} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[16px] font-bold">{t("plan.simulator")}</p>
-              <p className="mt-0.5 text-[13px] text-muted">{t("plan.simulatorBody")}</p>
-            </div>
-            <Icon name="chevronRight" size={20} className="text-muted" />
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => navigate("/simulator")}
+          className="flex w-full items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card active:scale-[0.99]"
+        >
+          <Mascot pose="details" size={72} />
+          <div className="min-w-0 flex-1">
+            <p className="text-[16px] font-bold">{t("plan.simulator")}</p>
+            <p className="mt-0.5 text-[13px] text-muted">{t("plan.simulatorBody")}</p>
+          </div>
+          <Icon name="chevronRight" size={20} className="text-muted" />
+        </button>
 
-        {features.simulator ? (
-          <>
+        <>
             <SectionHeader
               title={t("plan.plannedSpending")}
               action={
@@ -188,11 +200,9 @@ export function Plan() {
                 <p className="px-4 py-5 text-[14px] text-muted">{t("plan.nothingPlanned")}</p>
               )}
             </Card>
-          </>
-        ) : null}
+        </>
 
-        {features.debts ? (
-          <>
+        <>
             <SectionHeader
               title={t("plan.debts")}
               action={
@@ -242,8 +252,7 @@ export function Plan() {
                 <p className="px-4 py-5 text-[14px] text-muted">{t("debts.noDebts")}</p>
               )}
             </Card>
-          </>
-        ) : null}
+        </>
 
         <Link to="/settings/reminders">
           <Button full variant="outline">

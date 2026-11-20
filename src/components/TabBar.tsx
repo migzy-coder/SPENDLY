@@ -2,24 +2,20 @@ import { NavLink } from "react-router";
 import { useI18n } from "../lib/i18n";
 import { Icon } from "./Icon";
 import type { IconName } from "./Icon";
-import { useFeatures } from "../lib/features";
 
 type Tab = { to: string; icon: IconName; labelKey: string };
 
 export function TabBar({ onAdd }: { onAdd: () => void }) {
   const { t } = useI18n();
-  const features = useFeatures();
 
   const tabs: Tab[] = [
-    ...(features.quickLog ? [{ to: "/today", icon: "home" as IconName, labelKey: "nav.today" }] : []),
-    ...(features.wishlist ? [{ to: "/goals", icon: "target" as IconName, labelKey: "nav.goals" }] : []),
-    ...(features.stats ? [{ to: "/stats", icon: "stats" as IconName, labelKey: "nav.stats" }] : []),
-    ...(features.plan ? [{ to: "/plan", icon: "plan" as IconName, labelKey: "nav.plan" }] : []),
+    { to: "/today", icon: "home" as IconName, labelKey: "nav.today" },
+    { to: "/goals", icon: "target" as IconName, labelKey: "nav.goals" },
+    { to: "/stats", icon: "stats" as IconName, labelKey: "nav.stats" },
+    { to: "/plan", icon: "plan" as IconName, labelKey: "nav.plan" },
   ];
 
-  if (tabs.length === 0) return null;
-
-  const showAdd = features.quickLog;
+  const showAdd = true;
 
   return (
     <nav

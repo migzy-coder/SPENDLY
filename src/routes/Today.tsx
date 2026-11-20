@@ -5,6 +5,9 @@ import { Icon } from "../components/Icon";
 import { Button, Card, CountUp, SectionHeader, Tag, cn } from "../components/ui";
 import { PageGuide } from "../components/PageGuide";
 import { AddSheet } from "../components/AddSheet";
+import { AddIncomeSheet } from "../components/AddIncomeSheet";
+import { UpdateBalanceSheet } from "../components/UpdateBalanceSheet";
+import { SalarySheet } from "../components/SalarySheet";
 import { useI18n } from "../lib/i18n";
 import { CATEGORIES, formatXaf } from "../lib/money";
 import { api, useBootstrap, useRefresh, useToday } from "../lib/store";
@@ -29,12 +32,18 @@ function greetingKey(hour: number): "today.greetingMorning" | "today.greetingAft
 export function Today() {
   const { data } = useBootstrap();
   const today = useToday();
-  const { t, locale } = useI18n();
+  const { t, locale, formatDate } = useI18n();
   const navigate = useNavigate();
   const refresh = useRefresh();
   const { show } = useToast();
   const [busy, setBusy] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [incomeOpen, setIncomeOpen] = useState(false);
+  const [balanceOpen, setBalanceOpen] = useState(false);
+  const [salaryOpen, setSalaryOpen] = useState(false);
+  const [salaryDismissed, setSalaryDismissed] = useState(
+    () => sessionStorage.getItem(`spendly.salary.asked.${today}`) === "1",
+  );
 
   const state = useMemo(() => (data ? buildMonthState(data, today) : null), [data, today]);
   const hour = Number(
@@ -136,14 +145,16 @@ export function Today() {
           </div>
         </div>
 
-        <p className="mt-6 text-[12px] font-semibold tracking-[0.14em] text-muted">{t("today.leftToSpend")}</p>
+        <p className="mt-6 text-[12px] font-semibold tracking-[0.08em] text-muted">
+          {t("period.availableUntil", { date: formatDate(state.periodEnd, { day: "numeric", month: "short" }) })}
+        </p>
         <div className="mt-1 flex items-end justify-between gap-3">
           <p className="text-[52px] leading-none font-bold tracking-[-0.03em]">
-            <CountUp value={state.leftToSpend} />
+            <CountUp value={state.free} />
             <span className="ml-1.5 text-[16px] font-semibold text-muted">XAF</span>
           </p>
           <p className="pb-1 text-right text-[13px] text-muted">
-            {t("today.spentOf", { spent: formatXaf(state.spent), total: formatXaf(state.income) })}
+            {t("today.spentOf", { spent: formatXaf(state.spent), total: formatXaf(state.currentBalance) })}
           </p>
         </div>
 
@@ -158,12 +169,17 @@ export function Today() {
           <span style={{ flex: Math.max(state.leftToSpend, 1) }} className="h-full rounded-full bg-hairline" />
         </div>
 
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-gold px-4 py-2 text-[14px] font-semibold text-gold-ink">
+        <div className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-semibold ${state.missing ? "bg-danger-tint text-danger" : "bg-gold text-gold-ink"}`}>
           <Icon name="wallet" size={16} />
-          {state.daysRemaining
-            ? t("today.allowanceToday", { amount: formatXaf(state.allowance) })
-            : t("today.allowanceNone")}
+          {state.missing
+            ? t("period.shortfall", { amount: formatXaf(state.missing) })
+            : state.daysRemaining
+              ? t("today.allowanceToday", { amount: formatXaf(state.allowance) })
+              : t("today.allowanceNone")}
         </div>
+        <p className="mt-2 text-[13px] text-muted">
+          {t("period.basedOnBalance")} · {t("period.daysLeft", { count: state.daysRemaining })}
+        </p>
       </header>
 
       <div className="mt-5 flex flex-col gap-4 px-5">
@@ -176,6 +192,121 @@ export function Today() {
             { title: t("guide.todayStep3Title"), body: t("guide.todayStep3Body") },
           ]}
         />
+        {state.missing ? (
+          <Card className="flex items-center gap-3 p-4">
+            <Icon name="info" size={24} className="shrink-0 text-danger" />
+            <p className="text-[13px] leading-snug text-muted">{t("period.shortfallBody")}</p>
+          </Card>
+        ) : null}
+
+        {state.salaryPrompt && !salaryDismissed ? (
+          <Card tint className="flex flex-col gap-3 p-4">
+            <div className="flex items-center gap-3">
+              <Icon name="wallet" size={24} className="shrink-0 text-accent" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[16px] font-bold">{t("period.salaryTitle")}</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-muted">{t("period.salaryBody")}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="md" className="flex-1" onClick={() => setSalaryOpen(true)}>{t("period.salaryYes")}</Button>
+              <Button
+                size="md"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  sessionStorage.setItem(`spendly.salary.asked.${today}`, "1");
+                  setSalaryDismissed(true);
+                }}
+              >
+                {t("period.salaryNotYet")}
+              </Button>
+            </div>
+          </Card>
+        ) : null}
+
+        {state.balanceConfirmationNeeded && state.period ? (
+          <Card className="flex flex-col gap-3 p-4">
+            <div className="flex items-center gap-3">
+              <Icon name="info" size={24} className="shrink-0 text-accent" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[16px] font-bold">{t("period.confirmTitle")}</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-muted">{t("period.confirmBody")}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="md"
+                className="flex-1"
+                onClick={async () => {
+                  await api.confirmBalance(state.period!.id);
+                  await refresh();
+                }}
+              >
+                {t("period.confirm")}
+              </Button>
+              <Button size="md" variant="outline" className="flex-1" onClick={() => setBalanceOpen(true)}>
+                {t("period.updateBalance")}
+              </Button>
+            </div>
+          </Card>
+        ) : null}
+
+        {state.balanceNudge && !state.balanceConfirmationNeeded ? (
+          <Card className="flex items-center justify-between gap-3 p-4">
+            <p className="text-[13px] leading-snug text-muted">{t("period.weeklyNudge")}</p>
+            <Button size="md" variant="tinted" onClick={() => setBalanceOpen(true)}>{t("period.updateBalance")}</Button>
+          </Card>
+        ) : null}
+
+        {state.fixedCostReminder ? (
+          <Card className="flex flex-col gap-3 p-4">
+            <div className="flex items-center gap-3">
+              <Icon name="receipt" size={24} className="shrink-0 text-accent" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[16px] font-bold">{t("period.fixedReminderTitle")}</p>
+                <p className="mt-0.5 text-[13px] leading-snug text-muted">{t("period.fixedReminderBody")}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="md"
+                className="flex-1"
+                onClick={async () => {
+                  await api.dismissFixedCostReminder();
+                  await refresh();
+                  navigate("/plan/fixed-costs");
+                }}
+              >
+                {t("period.addFixed")}
+              </Button>
+              <Button
+                size="md"
+                variant="outline"
+                className="flex-1"
+                onClick={async () => {
+                  await api.dismissFixedCostReminder();
+                  await refresh();
+                }}
+              >
+                {t("period.dismiss")}
+              </Button>
+            </div>
+          </Card>
+        ) : null}
+
+        {state.expectedIncome ? (
+          <Card className="flex items-center justify-between gap-3 px-4 py-3">
+            <span className="text-[14px] text-muted">{t("income.comingUp")}</span>
+            <span className="text-[16px] font-semibold tnum">{formatXaf(state.expectedIncome)}</span>
+          </Card>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="outline" size="md" onClick={() => setIncomeOpen(true)}>{t("income.add")}</Button>
+          <Button variant="tinted" size="md" onClick={() => setBalanceOpen(true)}>{t("period.updateBalance")}</Button>
+        </div>
+
         <Card className="flex items-center gap-3 p-4">
           <Mascot pose="home" size={84} />
           <div className="min-w-0 flex-1">
@@ -342,6 +473,15 @@ export function Today() {
       </div>
 
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} />
+      <AddIncomeSheet open={incomeOpen} onClose={() => setIncomeOpen(false)} />
+      <UpdateBalanceSheet open={balanceOpen} onClose={() => setBalanceOpen(false)} period={state.period} />
+      <SalarySheet
+        open={salaryOpen}
+        onClose={() => setSalaryOpen(false)}
+        sourceId={data.incomeSources.find((item) => item.is_primary === 1)?.id ?? ""}
+        date={today}
+        suggested={state.primarySalaryAmount}
+      />
     </div>
   );
 }

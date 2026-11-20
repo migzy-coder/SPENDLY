@@ -57,6 +57,16 @@ export function Stats() {
     () => (data ? data.planned.filter((item) => item.date >= range.from && item.date <= range.to) : []),
     [data, range],
   );
+  const incomeInRange = useMemo(
+    () =>
+      data
+        ? data.incomeEvents.filter(
+            (item) => item.status === "received" && item.date >= range.from && item.date <= range.to,
+          )
+        : [],
+    [data, range],
+  );
+  const incomeTotal = incomeInRange.reduce((sum, item) => sum + item.amount, 0);
 
   const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
 
@@ -186,16 +196,37 @@ export function Stats() {
           </button>
         </div>
 
-        <div className="flex justify-center">
-          <span className="rounded-full bg-surface px-4 py-2 text-[13px] font-semibold shadow-card">
-            {change === null
-              ? t("stats.noChange")
-              : t(mode === "week" ? "stats.versusPrevious" : "stats.versusPreviousMonth", {
-                  percent: `${Math.abs(change)}%`,
-                  direction: change >= 0 ? "+" : "−",
-                })}
-          </span>
-        </div>
+        {state?.insightsReady ? (
+          <div className="flex justify-center">
+            <span className="rounded-full bg-surface px-4 py-2 text-[13px] font-semibold shadow-card">
+              {change === null
+                ? t("stats.noChange")
+                : t(mode === "week" ? "stats.versusPrevious" : "stats.versusPreviousMonth", {
+                    percent: `${Math.abs(change)}%`,
+                    direction: change >= 0 ? "+" : "−",
+                  })}
+            </span>
+          </div>
+        ) : null}
+
+        <SectionHeader title={t("stats.incomeVsSpending")} />
+        <Card className="p-4">
+          <div className="flex items-center justify-between py-1.5">
+            <span className="text-[15px] text-muted">{t("stats.incomeReceived")}</span>
+            <span className="text-[17px] font-bold tnum text-success">+ {formatXaf(incomeTotal)}</span>
+          </div>
+          <div className="flex items-center justify-between py-1.5">
+            <span className="text-[15px] text-muted">{t("stats.spending")}</span>
+            <span className="text-[17px] font-bold tnum">− {formatXaf(total)}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t border-hairline pt-3">
+            <span className="text-[15px] font-semibold">{t("stats.net")}</span>
+            <span className="text-[17px] font-bold tnum">{formatXaf(incomeTotal - total)}</span>
+          </div>
+          {incomeInRange.length ? null : (
+            <p className="mt-2 text-[12px] text-muted">{t("income.empty")}</p>
+          )}
+        </Card>
 
         {mode === "week" ? (
           <Bars
@@ -217,18 +248,20 @@ export function Stats() {
 
         {mode === "month" ? (
           <>
-            <Card className="grid grid-cols-2 gap-3 p-4">
-              <div>
-                <p className="text-[13px] text-muted">{t("stats.averagePerDay")}</p>
-                <p className="text-[20px] font-bold tnum">{formatXaf(average)}</p>
-              </div>
-              <div>
-                <p className="text-[13px] text-muted">{t("stats.biggestDay")}</p>
-                <p className="text-[20px] font-bold tnum">
-                  {biggest.date ? formatXaf(biggest.amount) : "—"}
-                </p>
-              </div>
-            </Card>
+            {state?.insightsReady ? (
+              <Card className="grid grid-cols-2 gap-3 p-4">
+                <div>
+                  <p className="text-[13px] text-muted">{t("stats.averagePerDay")}</p>
+                  <p className="text-[20px] font-bold tnum">{formatXaf(average)}</p>
+                </div>
+                <div>
+                  <p className="text-[13px] text-muted">{t("stats.biggestDay")}</p>
+                  <p className="text-[20px] font-bold tnum">
+                    {biggest.date ? formatXaf(biggest.amount) : "—"}
+                  </p>
+                </div>
+              </Card>
+            ) : null}
 
             <SectionHeader title={t("stats.compareMonths")} />
             <Card className="p-4">
@@ -282,7 +315,10 @@ export function Stats() {
                 </p>
               </>
             ) : (
-              <p className="text-[15px] font-bold">{t("stats.needDays")}</p>
+              <div>
+                <p className="text-[15px] font-bold">{t("stats.collecting")}</p>
+                <p className="mt-1 text-[13px] text-muted">{t("stats.collectingHint")}</p>
+              </div>
             )}
           </div>
         </Card>

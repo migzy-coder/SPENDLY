@@ -5,6 +5,7 @@ import { Mascot } from "../components/Mascot";
 import { NavBar } from "../components/NavBar";
 import { PageGuide, resetGuides } from "../components/PageGuide";
 import { Sheet } from "../components/Sheet";
+import { UpdateBalanceSheet } from "../components/UpdateBalanceSheet";
 import { Button, Capsule, Card, Group, Input, ListRow, SectionHeader, Segmented, Switch } from "../components/ui";
 import { PaydayRangePicker } from "../components/PaydayRangePicker";
 import { useToast } from "../components/Toast";
@@ -13,7 +14,7 @@ import { useI18n } from "../lib/i18n";
 import { applyTheme, readTheme } from "../lib/theme";
 import type { ThemeMode } from "../lib/theme";
 import { api, useBootstrap, useRefresh } from "../lib/store";
-import type { ReminderItem } from "../lib/types";
+import type { IncomeMode, ReminderItem } from "../lib/types";
 
 export function Settings() {
   const { data } = useBootstrap();
@@ -23,6 +24,7 @@ export function Settings() {
   const { show } = useToast();
   const refresh = useRefresh();
   const [theme, setTheme] = useState<ThemeMode>(() => readTheme());
+  const [balanceOpen, setBalanceOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
 
@@ -87,14 +89,17 @@ export function Settings() {
             onClick={() => navigate("/settings/help")}
             trailing={<Icon name="chevronRight" size={17} className="text-muted" />}
           />
-          <ListRow
-            icon="shield"
-            title={t("admin.title")}
-            subtitle={t("admin.subtitle")}
-            onClick={() => navigate("/admin")}
-            trailing={<Icon name="chevronRight" size={17} className="text-muted" />}
-          />
         </Group>
+
+        <SectionHeader title={t("settings2.moneyTitle")} />
+        <Card className="p-4">
+          <p className="mb-3 text-[13px] text-muted">{t("settings2.moneyDesc")}</p>
+          <div className="flex flex-col gap-1">
+            <ListRow icon="wallet" title={t("period.updateBalance")} onClick={() => setBalanceOpen(true)} trailing={<Icon name="chevronRight" size={17} className="text-muted" />} />
+            <ListRow icon="arrowUp" title={t("income.sources")} onClick={() => navigate("/settings/income-sources")} trailing={<Icon name="chevronRight" size={17} className="text-muted" />} />
+            <ListRow icon="receipt" title={t("fixed.title")} onClick={() => navigate("/plan/fixed-costs")} trailing={<Icon name="chevronRight" size={17} className="text-muted" />} />
+          </div>
+        </Card>
 
         <SectionHeader title={t("settings.language")} />
         <Card className="p-4">
@@ -110,6 +115,8 @@ export function Settings() {
                   nightlyTime: data.user.nightly_time,
                   locale: value,
                   theme,
+                  incomeMode: data.user.income_mode ?? "salary",
+                  horizonDays: data.user.rolling_horizon_days ?? 30,
                 });
                 await refresh();
               }
@@ -136,6 +143,8 @@ export function Settings() {
                   nightlyTime: data.user.nightly_time,
                   locale,
                   theme: value,
+                  incomeMode: data.user.income_mode ?? "salary",
+                  horizonDays: data.user.rolling_horizon_days ?? 30,
                 });
                 await refresh();
               }
@@ -180,6 +189,7 @@ export function Settings() {
         <p className="text-center text-[12px] text-muted">{t("settings.storageNote")}</p>
       </div>
 
+      <UpdateBalanceSheet open={balanceOpen} onClose={() => setBalanceOpen(false)} />
       <Sheet open={confirmSignOut} onClose={() => setConfirmSignOut(false)} title={t("settings.signOutConfirmTitle")}>
         <div className="flex flex-col gap-3 pb-2">
           <p className="text-[14px] text-muted">{t("settings.signOutConfirmBody")}</p>
@@ -230,6 +240,8 @@ export function ProfileSettings() {
   const [paydayStart, setPaydayStart] = useState(data?.user?.payday_day ?? 24);
   const [paydayEnd, setPaydayEnd] = useState(data?.user?.payday_day_end ?? 28);
   const [nightlyTime, setNightlyTime] = useState(data?.user?.nightly_time ?? "21:00");
+  const [incomeMode, setIncomeMode] = useState<IncomeMode>(data?.user?.income_mode ?? "salary");
+  const [horizon, setHorizon] = useState(data?.user?.rolling_horizon_days ?? 30);
 
   return (
     <div className="pb-6">
@@ -250,6 +262,29 @@ export function ProfileSettings() {
             }}
           />
         </div>
+        <div>
+          <span className="mb-2 block text-[13px] font-medium text-muted">{t("settings2.incomeMode")}</span>
+          <div className="flex flex-wrap gap-2">
+            {(["salary", "variable", "both"] as IncomeMode[]).map((item) => (
+              <Capsule key={item} type="button" selected={incomeMode === item} onClick={() => setIncomeMode(item)}>
+                {t(item === "salary" ? "setup2.earnSalary" : item === "variable" ? "setup2.earnVariable" : "setup2.earnBoth")}
+              </Capsule>
+            ))}
+          </div>
+        </div>
+        {incomeMode === "variable" ? (
+          <div>
+            <span className="mb-2 block text-[13px] font-medium text-muted">{t("settings2.horizon")}</span>
+            <p className="mb-2 text-[12px] text-muted">{t("settings2.horizonDesc")}</p>
+            <div className="flex gap-2">
+              {[7, 14, 30].map((value) => (
+                <Capsule key={value} type="button" selected={horizon === value} onClick={() => setHorizon(value)}>
+                  {t("setup2.days", { count: value })}
+                </Capsule>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-muted">{t("settings.nightlyTime")}</span>
           <Input type="time" value={nightlyTime} onChange={(event) => setNightlyTime(event.target.value)} />
@@ -268,6 +303,8 @@ export function ProfileSettings() {
               nightlyTime: /^\d{2}:\d{2}$/.test(nightlyTime) ? nightlyTime : "21:00",
               locale,
               theme: readTheme(),
+              incomeMode,
+              horizonDays: horizon,
             });
             await refresh();
             show(t("common.saved"));
