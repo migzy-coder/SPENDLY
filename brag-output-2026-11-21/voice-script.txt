@@ -1,0 +1,19 @@
+SPENDLY — French voiceover script (25 s)
+
+Voice: Kokoro ff_siwis (fr-FR), female, warm and calm.
+Delivery: ~2.5 words/second, small pauses between phrases.
+All six clips are placed at these exact starts in assets/final-mix.m4a.
+
+00:00.2  Il te reste 28 000 francs. La paie, c'est dans 9 jours.
+00:04.8  Spendly fait le calcul pour toi : 3 100 francs aujourd'hui.
+00:08.8  Pas de tableur, pas de calcul. Juste ce qu'il te reste jusqu'à la paie.
+00:13.8  Le soir, trois taps, et ton chiffre se met à jour.
+00:18.8  Avant d'acheter, demande-lui si ça passe.
+00:22.2  Spendly. Ton argent, sans stress.
+
+Fictional account used on screen: Aïcha. No real names, emails or data.
+Illustrative figures only: 28 000 XAF, 9 days, 3 100 F/day, Food 2 500, 25 500, 2 800, cinema 3 000.
+
+If replacing with a human recording: keep these exact start times, leave the gaps
+(4.6–4.8, 8.6–8.8, 17.4–18.8, 22.0–22.2, 24.8–25.0) silent under narration,
+and re-mix with the music ducked 10–12 dB.

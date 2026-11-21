@@ -1,0 +1,28 @@
+1
+00:00:00,200 --> 00:00:04,600
+Il te reste 28 000 francs.
+La paie, c'est dans 9 jours.
+
+2
+00:00:04,800 --> 00:00:08,600
+Spendly fait le calcul pour toi :
+3 100 francs aujourd'hui.
+
+3
+00:00:08,800 --> 00:00:13,800
+Pas de tableur, pas de calcul.
+Juste ce qu'il te reste jusqu'à la paie.
+
+4
+00:00:13,800 --> 00:00:17,600
+Le soir, trois taps,
+et ton chiffre se met à jour.
+
+5
+00:00:18,800 --> 00:00:22,000
+Avant d'acheter,
+demande-lui si ça passe.
+
+6
+00:00:22,200 --> 00:00:25,000
+Spendly. Ton argent, sans stress.
